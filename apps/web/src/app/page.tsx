@@ -1,7 +1,5 @@
 import FirstCard from '@/components/customs/card/FirstCard';
 import Hero from '@/components/sections/Hero';
-import Link from 'next/link';
-import React from 'react';
 
 export default function AIToolLandingPage() {
   return (

@@ -1,4 +1,3 @@
-import React from 'react';
 import { Button } from '../ui/button';
 
 const Hero = () => {
@@ -35,7 +34,9 @@ const Hero = () => {
             lorem cupidatat commodo. Elit sunt amet fugiat veniam occaecat.
           </p>
           <div className="mt-10 flex items-center justify-center gap-x-6">
-            <Button variant={'default'} className='cursor-pointer'>Get started</Button>
+            <Button variant={'default'} className="cursor-pointer">
+              Get started
+            </Button>
             <Button variant={'link'}>
               Learn more <span aria-hidden="true">→</span>
             </Button>
