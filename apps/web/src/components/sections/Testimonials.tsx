@@ -1,6 +1,7 @@
 'use client';
 
 import { Star } from 'lucide-react';
+import Image from 'next/image';
 
 const testimonials = [
   {
@@ -47,11 +48,13 @@ const TestimonialCard = ({
 }) => (
   <div className="rounded-xl border border-border bg-muted/30 p-6 shadow-sm hover:bg-muted/40 transition">
     <StarRating />
-    <p className="mt-4 text-base text-secondary/80 italic">"{feedback}"</p>
+    <p className="mt-4 text-base text-secondary/80 italic">{feedback}</p>
     <div className="mt-6 flex items-center gap-4">
-      <img
+      <Image
         src={avatar}
         alt={name}
+        width={48}
+        height={48}
         className="h-12 w-12 rounded-full border border-border object-cover"
       />
       <div>

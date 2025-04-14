@@ -1,6 +1,7 @@
 'use client';
 
 import { Lightbulb, ThumbsUp, Clock, DollarSign } from 'lucide-react';
+import SecondCard from '../customs/card/secondCard';
 
 const reasons = [
   {
@@ -28,25 +29,6 @@ const reasons = [
   },
 ];
 
-const ReasonCard = ({
-  icon,
-  title,
-  description,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-}) => (
-  <div className="group rounded-2xl border border-border bg-accent/10 p-6 shadow-sm transition hover:shadow-md hover:border-primary space-y-3 duration-300">
-    <div className="text-xl ">
-      <span className="">{icon}</span>
-    </div>
-    <div className="w-full h-[1px] bg-gradient-to-r from-primary/70 via-transparent to-transparent group-hover:to-primary group-hover:via-primary duration-300 ease-in-out"></div>
-    <h3 className="text-xl font-semibold text-primary">{title}</h3>
-    <p className="mt-2 text-sm text-secondary/70">{description}</p>
-  </div>
-);
-
 const WhyChooseUs = () => {
   return (
     <section className="relative z-10 mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
@@ -60,7 +42,7 @@ const WhyChooseUs = () => {
       </div>
       <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
         {reasons.map((item, index) => (
-          <ReasonCard key={index} {...item} />
+          <SecondCard key={item.title + index} {...item} />
         ))}
       </div>
     </section>

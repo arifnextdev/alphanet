@@ -3,7 +3,6 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
-
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -11,11 +10,9 @@ import {
   NavigationMenuLink,
   NavigationMenuList,
   NavigationMenuTrigger,
-  navigationMenuTriggerStyle,
 } from '@/components/ui/navigation-menu';
-
-import { LogsIcon, MenuIcon, XIcon } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { MenuIcon } from 'lucide-react';
 
 const components = [
   {
@@ -71,6 +68,29 @@ export function Header() {
               <NavDropdown label="Email" />
               <NavDropdown label="VPS" />
               <NavDropdown label="Dedicated Server" />
+              <NavDropdown label="Cloud" />
+
+              <NavigationMenuItem>
+                <Link href="/about" passHref legacyBehavior>
+                  <NavigationMenuLink className="text-md font-medium text-primary">
+                    About
+                  </NavigationMenuLink>
+                </Link>
+              </NavigationMenuItem>
+              <NavigationMenuItem>
+                <Link href="/contact" passHref legacyBehavior>
+                  <NavigationMenuLink className="text-md font-medium text-primary">
+                    Contact
+                  </NavigationMenuLink>
+                </Link>
+              </NavigationMenuItem>
+              <NavigationMenuItem>
+                <Link href="/login" passHref legacyBehavior>
+                  <NavigationMenuLink className="font-medium bg-primary text-white px-4 py-2 rounded">
+                    Login
+                  </NavigationMenuLink>
+                </Link>
+              </NavigationMenuItem>
             </NavigationMenuList>
           </NavigationMenu>
         </div>
@@ -78,16 +98,41 @@ export function Header() {
         {/* Mobile Menu */}
         <div className="md:hidden">
           <Sheet>
-            <SheetTrigger>
+            <SheetTrigger aria-label="Open mobile menu">
               <MenuIcon className="w-6 h-6 text-primary" />
             </SheetTrigger>
             <SheetContent side="right" className="w-[80%] p-4 bg-white">
               <div className="space-y-4">
-                {['Hosting', 'Domain', 'Email', 'VPS', 'Dedicated Server'].map(
-                  (section) => (
-                    <MobileDropdown key={section} label={section} />
-                  ),
-                )}
+                {[
+                  'Hosting',
+                  'Domain',
+                  'Email',
+                  'VPS',
+                  'Dedicated Server',
+                  'Cloud',
+                ].map((section) => (
+                  <MobileDropdown key={section} label={section} />
+                ))}
+                <div className="space-y-2 pt-4 border-t">
+                  <Link
+                    href="/about"
+                    className="block text-gray-700 hover:text-primary"
+                  >
+                    About
+                  </Link>
+                  <Link
+                    href="/contact"
+                    className="block text-gray-700 hover:text-primary"
+                  >
+                    Contact
+                  </Link>
+                  <Link
+                    href="/login"
+                    className="block font-medium bg-primary text-white px-4 py-2 rounded w-fit"
+                  >
+                    Login
+                  </Link>
+                </div>
               </div>
             </SheetContent>
           </Sheet>
@@ -100,7 +145,7 @@ export function Header() {
 function NavDropdown({ label }: { label: string }) {
   return (
     <NavigationMenuItem>
-      <NavigationMenuTrigger className="text-primary">
+      <NavigationMenuTrigger className="bg-transparent text-primary text-md">
         {label}
       </NavigationMenuTrigger>
       <NavigationMenuContent>

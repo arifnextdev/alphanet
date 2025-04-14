@@ -1,5 +1,7 @@
 'use client';
 
+import Image from 'next/image';
+
 const teamMembers = [
   {
     name: 'Md Ariful Islam',
@@ -28,9 +30,12 @@ const TeamMember = ({
   avatar: string;
 }) => (
   <div className="flex flex-col items-center rounded-xl border border-border bg-muted/30 p-6 shadow-sm hover:bg-muted/40 transition">
-    <img
+    <Image
       src={avatar}
       alt={name}
+      width={96}
+      height={96}
+      priority
       className="h-24 w-24 rounded-full object-cover border border-border"
     />
     <h4 className="mt-4 text-lg font-semibold text-primary">{name}</h4>

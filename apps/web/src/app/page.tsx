@@ -1,5 +1,3 @@
-import FirstCard from '@/components/customs/card/FirstCard';
-import SectionTitle from '@/components/global/SectionTitle';
 import CTA from '@/components/sections/CTA';
 import Hero from '@/components/sections/Hero';
 import OurServices from '@/components/sections/OurServices';
