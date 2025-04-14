@@ -4,7 +4,7 @@ import Link from 'next/link';
 
 const FirstCard = () => {
   return (
-    <div className="w-full bg-gradient-to-bl from-primary/20 to-secondary/5 border border-primary/20 p-6 rounded-2xl  text-white hover:border-primary/60 group space-y-3 z-50 duration-300 ease-in-out cursor-pointer ">
+    <div className="w-full bg-gradient-to-bl from-primary/20 to-secondary/5 border border-primary/20 p-6 rounded-2xl  text-white hover:border-primary/60 group space-y-3 z10 duration-300 ease-in-out cursor-pointer ">
       {/* Profile */}
       <div className="flex flex-col gap-2  group-hover:border-primary">
         <Server size={30} />
