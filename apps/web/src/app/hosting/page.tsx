@@ -157,7 +157,7 @@ export default function HostingPage() {
               {
                 name: 'Sarah J.',
                 feedback:
-                  'Alpha Net hosting has been rock-solid. I’ve never faced downtime in the past year!',
+                  'Alpha Net hosting has been rock-solid. I have never faced downtime in the past year!',
               },
               {
                 name: 'Michael R.',

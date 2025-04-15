@@ -154,7 +154,7 @@ function NavDropdown({ label, href }: { label: string; href: string }) {
     <NavigationMenuItem>
       <NavigationMenuTrigger
         className="bg-transparent text-foreground text-md cursor-pointer"
-        onClick={(e) => redirect(`${href}`)}
+        onClick={() => redirect(`${href}`)}
       >
         {label}
       </NavigationMenuTrigger>

@@ -35,7 +35,7 @@ const serviceData = {
     },
   ],
   about: {
-    title: 'We Don’t Just Build — We Solve.',
+    title: 'We Dont Just Build — We Solve.',
     description:
       'Our team blends creativity, engineering, and strategy to solve real-world problems. We craft digital products that are functional, scalable, and future-ready.',
     image: '/images/about-us.png',
@@ -74,7 +74,7 @@ const serviceData = {
     },
   ],
   cta: {
-    title: 'Let’s Build Something Great Together!',
+    title: 'Lets Build Something Great Together!',
     subtitle: 'Start your project consultation with our expert team.',
     buttonText: 'Schedule a Call',
   },
