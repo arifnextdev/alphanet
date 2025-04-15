@@ -55,7 +55,7 @@ const components = [
 
 export function Header() {
   return (
-    <header className=" bg-background/60 border-b  border-primary/20 shadow-sm fixed w-full top-0 z-50">
+    <header className=" bg-background/10 backdrop-blur border-b  border-primary/20 shadow-sm fixed w-full top-0 z-50">
       <div className="mx-auto max-w-7xl px-4 py-3 flex justify-between items-center">
         <Link href="/" className="text-xl font-bold text-primary">
           Alpha Net
