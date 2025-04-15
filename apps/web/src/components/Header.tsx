@@ -1,8 +1,5 @@
 'use client';
 
-import * as React from 'react';
-import Link from 'next/link';
-import { cn } from '@/lib/utils';
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -12,7 +9,12 @@ import {
   NavigationMenuTrigger,
 } from '@/components/ui/navigation-menu';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { cn } from '@/lib/utils';
 import { MenuIcon } from 'lucide-react';
+import Link from 'next/link';
+import { redirect } from 'next/navigation';
+import * as React from 'react';
+import { ModeToggle } from './themeToggole';
 
 const components = [
   {
@@ -53,7 +55,7 @@ const components = [
 
 export function Header() {
   return (
-    <div className="bg-accent-foreground/60 border-b border-primary/20 shadow-sm fixed w-full top-0 z-50">
+    <header className=" bg-background/60 border-b  border-primary/20 shadow-sm fixed w-full top-0 z-50">
       <div className="mx-auto max-w-7xl px-4 py-3 flex justify-between items-center">
         <Link href="/" className="text-xl font-bold text-primary">
           Alpha Net
@@ -63,29 +65,32 @@ export function Header() {
         <div className="hidden md:flex items-center space-x-4">
           <NavigationMenu>
             <NavigationMenuList className="flex gap-2">
-              <NavDropdown label="Hosting" />
-              <NavDropdown label="Domain" />
-              <NavDropdown label="Email" />
-              <NavDropdown label="VPS" />
-              <NavDropdown label="Dedicated Server" />
-              <NavDropdown label="Cloud" />
+              <NavDropdown label="Hosting" href="/services/hosting" />
+              <NavDropdown label="Domain" href="/services/domain" />
+              <NavDropdown label="Email" href="/services/email" />
+              <NavDropdown label="VPS" href="/services/vps" />
+              <NavDropdown
+                label="Dedicated Server"
+                href="/services/dedicated-server"
+              />
+              <NavDropdown label="Cloud" href="/services/cloud" />
 
               <NavigationMenuItem>
                 <Link href="/about" passHref legacyBehavior>
-                  <NavigationMenuLink className="text-md font-medium text-primary">
+                  <NavigationMenuLink className="text-md font-medium text-foreground">
                     About
                   </NavigationMenuLink>
                 </Link>
               </NavigationMenuItem>
               <NavigationMenuItem>
                 <Link href="/contact" passHref legacyBehavior>
-                  <NavigationMenuLink className="text-md font-medium text-primary">
+                  <NavigationMenuLink className="text-md font-medium text-foreground">
                     Contact
                   </NavigationMenuLink>
                 </Link>
               </NavigationMenuItem>
               <NavigationMenuItem>
-                <Link href="/login" passHref legacyBehavior>
+                <Link href="/auth/login" passHref legacyBehavior>
                   <NavigationMenuLink className="font-medium bg-primary text-white px-4 py-2 rounded">
                     Login
                   </NavigationMenuLink>
@@ -93,6 +98,7 @@ export function Header() {
               </NavigationMenuItem>
             </NavigationMenuList>
           </NavigationMenu>
+          <ModeToggle />
         </div>
 
         {/* Mobile Menu */}
@@ -101,7 +107,7 @@ export function Header() {
             <SheetTrigger aria-label="Open mobile menu">
               <MenuIcon className="w-6 h-6 text-primary" />
             </SheetTrigger>
-            <SheetContent side="right" className="w-[80%] p-4 bg-white">
+            <SheetContent side="right" className="w-[80%] p-4 bg-background">
               <div className="space-y-4">
                 {[
                   'Hosting',
@@ -116,13 +122,13 @@ export function Header() {
                 <div className="space-y-2 pt-4 border-t">
                   <Link
                     href="/about"
-                    className="block text-gray-700 hover:text-primary"
+                    className="block text-foreground hover:text-primary"
                   >
                     About
                   </Link>
                   <Link
                     href="/contact"
-                    className="block text-gray-700 hover:text-primary"
+                    className="block text-foreground hover:text-primary"
                   >
                     Contact
                   </Link>
@@ -133,19 +139,23 @@ export function Header() {
                     Login
                   </Link>
                 </div>
+                <ModeToggle />
               </div>
             </SheetContent>
           </Sheet>
         </div>
       </div>
-    </div>
+    </header>
   );
 }
 
-function NavDropdown({ label }: { label: string }) {
+function NavDropdown({ label, href }: { label: string; href: string }) {
   return (
     <NavigationMenuItem>
-      <NavigationMenuTrigger className="bg-transparent text-primary text-md">
+      <NavigationMenuTrigger
+        className="bg-transparent text-foreground text-md cursor-pointer"
+        onClick={(e) => redirect(`${href}`)}
+      >
         {label}
       </NavigationMenuTrigger>
       <NavigationMenuContent>
@@ -168,13 +178,13 @@ function NavDropdown({ label }: { label: string }) {
 function MobileDropdown({ label }: { label: string }) {
   return (
     <div>
-      <div className="font-semibold text-gray-800 mb-2">{label}</div>
+      <div className="font-semibold text-foreground mb-2">{label}</div>
       <ul className="space-y-2">
         {components.map((component) => (
           <li key={component.title}>
             <Link
               href={component.href}
-              className="text-sm text-gray-600 block hover:text-primary"
+              className="text-sm text-muted-foreground block hover:text-primary"
             >
               {component.title}
             </Link>

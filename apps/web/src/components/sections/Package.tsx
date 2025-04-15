@@ -1,8 +1,8 @@
 'use client';
-import React, { useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { Check } from 'lucide-react';
+import { useState } from 'react';
 import SectionTitle from '../global/SectionTitle';
 
 type Plan = {
@@ -110,17 +110,17 @@ export default function PricingSection() {
   const plans = planData[billingCycle];
 
   return (
-    <section className="py-20 bg-gradient-to-b from-white to-gray-50">
+    <section className="py-20">
       <SectionTitle
         title="Our Pricing Plans"
         desc="Choose a plan that fits your needs"
       />
-      <div className="flex justify-center mb-8">
+      <div className="flex justify-center mb-16">
         <div className="inline-flex border rounded-full bg-white shadow-sm">
           <button
             className={`px-4 py-1 text-sm font-medium rounded-full transition ${
               billingCycle === 'annually'
-                ? 'bg-purple-600 text-white'
+                ? 'bg-primary text-white'
                 : 'text-gray-700 hover:bg-gray-100'
             }`}
             onClick={() => setBillingCycle('annually')}
@@ -130,7 +130,7 @@ export default function PricingSection() {
           <button
             className={`px-4 py-1 text-sm font-medium rounded-full transition ${
               billingCycle === 'monthly'
-                ? 'bg-purple-600 text-white'
+                ? 'bg-primary '
                 : 'text-gray-700 hover:bg-gray-100'
             }`}
             onClick={() => setBillingCycle('monthly')}
@@ -139,12 +139,14 @@ export default function PricingSection() {
           </button>
         </div>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 px-4 max-w-6xl mx-auto">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-10 px-4 max-w-6xl mx-auto">
         {plans.map((plan, idx) => (
           <Card
             key={idx}
             className={`flex flex-col justify-between border transition-transform duration-300 hover:scale-105 ${
-              plan.highlighted ? 'bg-[#1c143f] text-white' : 'bg-white'
+              plan.highlighted
+                ? 'dark:bg-primary bg-primary scale-110 hover:scale-110'
+                : 'bg-secondary '
             }`}
           >
             <CardContent className="p-6">
@@ -156,14 +158,14 @@ export default function PricingSection() {
               <p className="text-sm mb-6">{plan.description}</p>
               <Button
                 variant={plan.highlighted ? 'default' : 'outline'}
-                className="w-full mb-6"
+                className={`w-full mb-6 text-md font-medium cursor-pointer ${plan.highlighted ? 'bg-white text-primary hover:bg-white/90' : ''}`}
               >
                 {plan.button}
               </Button>
               <ul className="space-y-3">
                 {plan.features.map((feature, i) => (
                   <li key={i} className="flex items-start space-x-2">
-                    <Check className="w-4 h-4 text-purple-500 mt-1" />
+                    <Check className="w-4 h-4 mt-1" />
                     <span>{feature}</span>
                   </li>
                 ))}

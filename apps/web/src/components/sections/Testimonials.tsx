@@ -2,6 +2,7 @@
 
 import { Star } from 'lucide-react';
 import Image from 'next/image';
+import SectionTitle from '../global/SectionTitle';
 
 const testimonials = [
   {
@@ -48,7 +49,7 @@ const TestimonialCard = ({
 }) => (
   <div className="rounded-xl border border-border bg-muted/30 p-6 shadow-sm hover:bg-muted/40 transition">
     <StarRating />
-    <p className="mt-4 text-base text-secondary/80 italic">{feedback}</p>
+    <p className="mt-4 text-base  italic">{feedback}</p>
     <div className="mt-6 flex items-center gap-4">
       <Image
         src={avatar}
@@ -69,12 +70,10 @@ const Testimonials = () => {
   return (
     <section className="relative z-10 mx-auto max-w-6xl px-4 py-24 sm:px-6 lg:px-8">
       <div className="text-center mb-16">
-        <h2 className="text-4xl font-bold text-primary sm:text-5xl">
-          What Our Clients Say
-        </h2>
-        <p className="mt-4 text-lg text-secondary/70">
-          Real feedback from real clients who loved working with us.
-        </p>
+        <SectionTitle
+          title="What Our Clients Say"
+          desc="We are a team of passionate experts dedicated to turning your ideas into reality."
+        />
       </div>
       <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
         {testimonials.map((testimonial, index) => (

@@ -17,7 +17,7 @@ const Hero = () => {
       </div>
       <div className="mx-auto max-w-2xl py-32 sm:py-48 lg:py-56">
         <div className="hidden sm:mb-8 sm:flex sm:justify-center">
-          <div className="relative rounded-full px-3 py-1 text-sm/6 text-secondary ring-1 ring-primary/30 hover:ring-primary/50">
+          <div className="relative rounded-full px-3 py-1 text-sm/6  ring-1 ring-primary/30 hover:ring-primary/50">
             Announcing our next round of funding.{' '}
             <a href="#" className="font-semibold text-indigo-600">
               <span className="absolute inset-0" aria-hidden="true" />
@@ -29,7 +29,7 @@ const Hero = () => {
           <h1 className="text-5xl font-semibold tracking-tight text-balance text-primary sm:text-7xl">
             Data to enrich your online business
           </h1>
-          <p className="mt-8 text-lg font-medium text-pretty text-secondary/50 sm:text-xl/8">
+          <p className="mt-8 text-lg font-medium text-pretty opacity-80 tracking-wider sm:text-xl/8">
             Anim aute id magna aliqua ad ad non deserunt sunt. Qui irure qui
             lorem cupidatat commodo. Elit sunt amet fugiat veniam occaecat.
           </p>

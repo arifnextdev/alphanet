@@ -17,7 +17,7 @@ const SecondCard = ({
         </div>
         <div className="w-full h-[1px] bg-gradient-to-r from-primary/70 via-transparent to-transparent group-hover:to-primary group-hover:via-primary duration-300 ease-in-out"></div>
         <h3 className="text-xl font-semibold text-primary">{title}</h3>
-        <p className="mt-2 text-sm text-secondary/70">{description}</p>
+        <p className="mt-2 text-sm ">{description}</p>
       </div>
     </>
   );

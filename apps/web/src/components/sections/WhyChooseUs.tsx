@@ -1,7 +1,8 @@
 'use client';
 
-import { Lightbulb, ThumbsUp, Clock, DollarSign } from 'lucide-react';
+import { Clock, DollarSign, Lightbulb, ThumbsUp } from 'lucide-react';
 import SecondCard from '../customs/card/secondCard';
+import SectionTitle from '../global/SectionTitle';
 
 const reasons = [
   {
@@ -33,12 +34,10 @@ const WhyChooseUs = () => {
   return (
     <section className="relative z-10 mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
       <div className="text-center mb-16">
-        <h2 className="text-4xl font-bold text-primary sm:text-5xl">
-          Why Choose Us?
-        </h2>
-        <p className="mt-4 text-lg text-secondary/70">
-          Here’s why clients love working with us and why you will too.
-        </p>
+        <SectionTitle
+          title="Why Choose Us"
+          desc="We are a trusted provider of web hosting, cloud services, and enterprise IT solutions."
+        />
       </div>
       <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
         {reasons.map((item, index) => (

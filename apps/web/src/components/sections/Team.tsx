@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import SectionTitle from '../global/SectionTitle';
 
 const teamMembers = [
   {
@@ -47,12 +48,10 @@ const Team = () => {
   return (
     <section className="mx-auto max-w-6xl px-4 py-24 sm:px-6 lg:px-8">
       <div className="text-center mb-16">
-        <h2 className="text-4xl font-bold text-primary sm:text-5xl">
-          Meet Our Team
-        </h2>
-        <p className="mt-4 text-lg text-secondary/70">
-          Passionate experts dedicated to turning your ideas into reality.
-        </p>
+        <SectionTitle
+          title="Meet Our Team"
+          desc="We are a team of passionate experts dedicated to turning your ideas into reality."
+        />
       </div>
       <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
         {teamMembers.map((member, index) => (
