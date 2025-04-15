@@ -113,7 +113,7 @@ export default function ServicePage({
           <div className="grid md:grid-cols-2 gap-6">
             {testimonials.map((t, i) => (
               <div key={i} className=" p-6 rounded-xl shadow-md text-left">
-                <p className="italic mb-4 ">"{t.quote}"</p>
+                <p className="italic mb-4 ">{t.quote}</p>
                 <div className="flex items-center gap-4">
                   <Image
                     src={t.avatar}

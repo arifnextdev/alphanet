@@ -170,7 +170,7 @@ export default function HostingPage() {
                 className="bg-white dark:bg-gray-900 p-6 rounded shadow border border-gray-200 dark:border-gray-700"
               >
                 <p className="text-gray-600 dark:text-gray-300 italic">
-                  "{testimonial.feedback}"
+                  {testimonial.feedback}
                 </p>
                 <p className="text-sm font-semibold mt-4 text-primary">
                   - {testimonial.name}
