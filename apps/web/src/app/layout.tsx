@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { Header } from '@/components/Header';
 import { ThemeProvider } from '@/components/theme-provider';
+import { ReactNode } from 'react';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -19,16 +20,10 @@ export const metadata: Metadata = {
   description: 'Alpha Net - Your Ultimate Hosting Solution',
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-black text-white`}
-      >
+      <body>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <Header />
           {children}
