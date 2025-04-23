@@ -1,0 +1,163 @@
+// schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  CUSTOMER
+  USER
+  MODERATOR // moderator
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  BANNED
+  PENDING
+  SUSPENDED
+  DELETED
+}
+
+model User {
+  id             String      @id @default(uuid())
+  name           String?
+  email          String      @unique
+  password       String?
+  roles          Role[]      @default([CUSTOMER])
+  avatar         String?
+  status         UserStatus  @default(ACTIVE)
+  provider       AuthProvider @default(CREDENTIAL)
+  providerId     String?      // for Google/GitHub ID
+  loginHistories LoginHistory[]
+  orders         Order[]
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  @@index([email,createdAt])
+}
+
+enum AuthProvider {
+  GOOGLE
+  GITHUB
+  CREDENTIAL
+}
+
+model LoginHistory {
+  id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  ip        String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  @@index([userId,createdAt])
+}
+
+enum ProductStatus {
+  ACTIVE
+  INACTIVE
+  DELETED
+  PENDING
+}
+
+enum BillingCycle {
+  MONTHLY
+  ANNUALLY
+  LIFETIME
+}
+
+model Product {
+  id          String   @id @default(uuid())
+  name        String
+  type        ProductType
+  description String?
+  price       Float    @default(0)
+  config      Json?    
+  isActive    Boolean  @default(true)
+  isDeleted   Boolean  @default(false)
+  billingCycle BillingCycle @default(MONTHLY)
+  status      ProductStatus   @default(ACTIVE)
+  orders      Order[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+enum ProductType {
+  DOMAIN
+  HOSTING
+  SSL
+  EMAIL
+  VPS
+  CLOUD
+  DEDICATED
+  SMS
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  FAILED
+  ACTIVE
+  EXPIRED
+  CANCELLED
+}
+
+model Order {
+  id          String      @id @default(uuid())
+  user        User        @relation(fields: [userId], references: [id])
+  userId      String
+  product     Product     @relation(fields: [productId], references: [id])
+  productId   String
+  domainName  String?     
+  status      OrderStatus @default(PENDING)
+  amount      Float
+  paidAt      DateTime?
+  expiresAt   DateTime?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  payments    Payment[]
+  @@index([userId, productId,createdAt])
+}
+
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  STRIPE
+  SSLCOMMERZ
+  PAYPAL
+}
+
+
+
+model Payment {
+  id        String   @id @default(uuid())
+  order     Order    @relation(fields: [orderId], references: [id])
+  orderId   String
+  method    PaymentMethod @default(SSLCOMMERZ) 
+  status    PaymentStatus @default(PENDING)   
+  currency  String?       @default("BDT")
+  transId   String?
+  amount    Float
+  paidAt    DateTime @default(now())
+  @@index([orderId,paidAt])
+}
+
+model Setting {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     Json?
+  category  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
