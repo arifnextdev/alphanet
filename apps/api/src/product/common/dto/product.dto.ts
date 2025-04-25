@@ -1,15 +1,13 @@
-import { z } from 'zod';
-import { ProductType, ProductStatus } from '@prisma/client';
+// import { z } from 'zod';
+// import { ProductType, ProductStatus } from '@prisma/client';
 
-export const CreateProductSchema = z.object({
-  name: z.string().min(3),
-  type: z.nativeEnum(ProductType),
-  description: z.string().optional(),
-  price: z.number().min(0),
-  config: z.any().optional(), // depends on product type
-  isActive: z.boolean().optional().default(true),
-  isDeleted: z.boolean().optional().default(false),
-  status: z.nativeEnum(ProductStatus).optional().default(ProductStatus.ACTIVE),
-});
+// export const createProductDto = z.object({
+//   name: z.string().min(3),
+//   type: z.nativeEnum(ProductType),
+//   description: z.string().optional(),
+//   price: z.number().min(0),
+//   config: z.any().optional(),
+//   status: z.nativeEnum(ProductStatus).optional().default(ProductStatus.ACTIVE),
+// });
 
-export type CreateProductDto = z.infer<typeof CreateProductSchema>;
+// export default createProductDto;
