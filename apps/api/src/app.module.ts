@@ -15,9 +15,11 @@ import { SettingService } from './product/setting/setting.service';
 import { PrismaService } from './prisma/prisma.service';
 import { PrismaModule } from './prisma/prisma.module';
 import { ProductController } from './product/product.controller';
+import { ProductModule } from './product/product.module';
+import { OrderModule } from './product/order/order.module';
 
 @Module({
-  imports: [PrismaModule],
+  imports: [PrismaModule, ProductModule, OrderModule],
   controllers: [
     AppController,
     AuthController,

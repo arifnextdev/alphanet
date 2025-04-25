@@ -11,4 +11,4 @@ export const CreateOrderSchema = z.object({
   expiresAt: z.coerce.date().optional(),
 });
 
-export type CreateOrderDto = z.infer<typeof CreateOrderSchema>;
+export type OrederCreateDto = z.infer<typeof CreateOrderSchema>;

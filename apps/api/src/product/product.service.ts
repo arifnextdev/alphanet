@@ -1,57 +1,56 @@
 // src/modules/product/product.service.ts
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-} from '@nestjs/common';
-import { ProductRepository } from './product.repository';
-
-import { isUUID } from 'class-validator';
-
+import { Injectable, NotFoundException, Res, Response } from '@nestjs/common';
+import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateProductDto, UpdateProductDto } from './common/dto';
+import { response } from 'express';
+import { json } from 'stream/consumers';
 
 @Injectable()
 export class ProductService {
-  constructor(private readonly productRepository: ProductRepository) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   async findAll() {
-    return this.productRepository.findAll();
+    const products = await this.prisma.product.findMany({
+      
+    });
+    return {
+      message: 'Products fetched successfully',
+      data: products,
+    };
   }
 
   async findById(id: string) {
-    this.ensureValidUUID(id);
-    const product = await this.productRepository.findById(id);
+    const product = await this.prisma.product.findUnique({ where: { id } });
     if (!product) {
-      throw new NotFoundException(`Product with ID ${id} not found`);
+      throw new NotFoundException('Product not found');
     }
     return product;
   }
 
-  async createProduct(dto: CreateProductDto) {
-    return this.productRepository.create(dto);
+  async createProduct(data: CreateProductDto) {
+    const product = await this.prisma.product.create({ data });
+    return {
+      message: 'Product created successfully',
+      data: product,
+    };
   }
 
-  async updateProduct(id: string, dto: UpdateProductDto) {
-    this.ensureValidUUID(id);
-    const product = await this.productRepository.findById(id);
-    if (!product) {
-      throw new NotFoundException(`Product with ID ${id} not found`);
-    }
-    return this.productRepository.update(id, dto);
+  async updateProduct(id: string, data: UpdateProductDto) {
+    const product = await this.prisma.product.update({
+      where: { id },
+      data,
+    });
+    return {
+      message: 'Product updated successfully',
+      data: product,
+    };
   }
 
   async deleteProduct(id: string) {
-    this.ensureValidUUID(id);
-    const product = await this.productRepository.findById(id);
-    if (!product) {
-      throw new NotFoundException(`Product with ID ${id} not found`);
-    }
-    return this.productRepository.delete(id);
-  }
-
-  private ensureValidUUID(id: string) {
-    if (!isUUID(id)) {
-      throw new BadRequestException(`Invalid UUID: ${id}`);
-    }
+    const product = await this.prisma.product.delete({ where: { id } });
+    return {
+      message: 'Product deleted successfully',
+      data: product,
+    };
   }
 }

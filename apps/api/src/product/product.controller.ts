@@ -12,7 +12,7 @@ import {
 import {
   CreateProductDto,
   CreateProductSchema,
-  UpdateProductDto
+  UpdateProductDto,
 } from './common/dto';
 import { ZodValidationPipe } from './common/zodValidationPipe';
 import { ProductService } from './product.service';
