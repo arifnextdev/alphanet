@@ -17,9 +17,10 @@ import { PrismaModule } from './prisma/prisma.module';
 import { ProductController } from './product/product.controller';
 import { ProductModule } from './product/product.module';
 import { OrderModule } from './product/order/order.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
-  imports: [PrismaModule, ProductModule, OrderModule],
+  imports: [PrismaModule, ProductModule, OrderModule, AuthModule],
   controllers: [
     AppController,
     AuthController,
