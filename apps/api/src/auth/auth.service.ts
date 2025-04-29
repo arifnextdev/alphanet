@@ -1,8 +1,13 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import * as bcrypt from 'bcrypt';
+import { Request } from 'express';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateUserDto } from './dto/user.dto';
-import { Request } from 'express';
 import { UserLoginDto } from './dto/user.login.dto';
 
 @Injectable()
@@ -13,17 +18,31 @@ export class AuthService {
   ) {}
 
   async signUp(dto: CreateUserDto) {
+    const existUser = await this.prisma.user.findUnique({
+      where: {
+        email: dto.email,
+      },
+    });
+
+    if (existUser) {
+      throw new UnauthorizedException('User already exists');
+    }
+
+    const hashPassword = await bcrypt.hash(dto.password, 10);
+
     const user = await this.prisma.user.create({
       data: {
         email: dto.email,
-        password: dto.password,
+        password: hashPassword,
         name: dto.name,
-        avatar: dto.avatar,
-        roles: dto.roles,
-        status: dto.status,
       },
       select: {
-        password: false,
+        id: true,
+        name: true,
+        email: true,
+        avatar: true,
+        roles: true,
+        status: true,
       },
     });
     return user;
@@ -40,7 +59,13 @@ export class AuthService {
       throw new NotFoundException('User not found');
     }
 
-    if (user.password !== dto.password) {
+    if (user.status !== 'ACTIVE') {
+      throw new UnauthorizedException('User is not active');
+    }
+
+    const isPasswordCorrect = await bcrypt.compare(dto.password, user.password);
+
+    if (!isPasswordCorrect) {
       await this.prisma.loginHistory.create({
         data: {
           userId: user?.id,
@@ -49,7 +74,7 @@ export class AuthService {
           //TODOS ADD STATUS
         },
       });
-      throw new Error('Password is incorrect');
+      throw new UnauthorizedException('Password is incorrect');
     }
 
     await this.prisma.loginHistory.create({
@@ -61,15 +86,70 @@ export class AuthService {
       },
     });
 
-    const payload = {
-      sub: user.id,
+    return this.#generateToken({
+      userId: user.id,
       email: user.email,
       roles: user.roles,
       status: user.status,
+    });
+  }
+
+  async me(payload: string) {
+    const token = await this.#VerifyToken(payload);
+
+    if (!token) {
+      throw new UnauthorizedException('Invalid token');
+    }
+
+    const user = await this.prisma.user.findUnique({
+      where: {
+        id: token['userId'],
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        avatar: true,
+        roles: true,
+        status: true,
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (user.status !== 'ACTIVE') {
+      throw new UnauthorizedException('User is not active');
+    }
+
+    return user;
+  }
+
+  #generateToken(payload: {
+    userId: string;
+    email: string;
+    roles: string[];
+    status: string;
+  }) {
+    const accessToken = this.jwtService.sign(payload);
+    return {
+      accessToken,
     };
+  }
 
-    const token = this.jwtService.sign(payload);
+  #VerifyToken(payload: string) {
+    try {
+      const token = this.jwtService.verify(payload);
 
-    return token;
+      if (!token) {
+        throw new UnauthorizedException('Invalid token');
+      }
+
+      console.log(token);
+      return token;
+    } catch (error) {
+      throw new UnauthorizedException('Invalid token');
+    }
   }
 }

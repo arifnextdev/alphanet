@@ -6,10 +6,15 @@ import {
   Param,
   Post,
   Put,
+  Query,
   UsePipes,
 } from '@nestjs/common';
 import { OrderService } from './order.service';
-import { CreateOrderSchema, OrederCreateDto } from '../common/dto/order.dto';
+import {
+  CreateOrderSchema,
+  GetOrderDto,
+  OrederCreateDto,
+} from '../common/dto/order.dto';
 import { ZodValidationPipe } from '../common/zodValidationPipe';
 
 @Controller('orders')
@@ -17,8 +22,8 @@ export class OrderController {
   constructor(private readonly orderService: OrderService) {}
 
   @Get()
-  findAll() {
-    return this.orderService.findAll();
+  findAll(@Query() query: GetOrderDto) {
+    return this.orderService.findAll(query);
   }
 
   @Get(':id')

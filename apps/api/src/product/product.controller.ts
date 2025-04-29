@@ -7,6 +7,7 @@ import {
   Param,
   Post,
   Put,
+  Query,
   UsePipes,
 } from '@nestjs/common';
 import {
@@ -14,6 +15,7 @@ import {
   CreateProductSchema,
   UpdateProductDto,
 } from './common/dto';
+import { getProductDto } from './common/dto/product.dto';
 import { ZodValidationPipe } from './common/zodValidationPipe';
 import { ProductService } from './product.service';
 
@@ -22,8 +24,8 @@ export class ProductController {
   constructor(private readonly productService: ProductService) {}
 
   @Get()
-  findAll() {
-    return this.productService.findAll();
+  findAll(@Query() query: getProductDto) {
+    return this.productService.findAll(query);
   }
 
   @Get(':id')

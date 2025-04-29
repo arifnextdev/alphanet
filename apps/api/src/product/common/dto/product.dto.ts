@@ -11,3 +11,11 @@
 // });
 
 // export default createProductDto;
+
+export type getProductDto = {
+  limit: number;
+  page: number;
+  type?: string;
+  billingCycle?: string;
+  search?: string;
+};

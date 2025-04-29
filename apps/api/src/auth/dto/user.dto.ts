@@ -16,3 +16,13 @@ export const CreateUserSchema = z.object({
 });
 
 export type CreateUserDto = z.infer<typeof CreateUserSchema>;
+
+//update user dto without password
+export const UpdateUserSchema = z.object({
+  name: z.string().optional(),
+  roles: z.nativeEnum(Role).array().optional(),
+  avatar: z.string().url().optional(),
+  status: z.nativeEnum(UserStatus).optional(),
+});
+
+export type UpdateUserDto = z.infer<typeof UpdateUserSchema>;

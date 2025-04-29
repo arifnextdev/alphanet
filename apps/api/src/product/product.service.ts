@@ -1,21 +1,49 @@
 // src/modules/product/product.service.ts
-import { Injectable, NotFoundException, Res, Response } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateProductDto, UpdateProductDto } from './common/dto';
-import { response } from 'express';
-import { json } from 'stream/consumers';
+import { getProductDto } from './common/dto/product.dto';
 
 @Injectable()
 export class ProductService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAll() {
-    const products = await this.prisma.product.findMany({
-      
-    });
+  async findAll({ limit = 10, page = 1, type, billingCycle, search }: getProductDto) {
+    const skip = (page - 1) * limit;
+
+    const where: any = {
+      ...(type && { type }),
+      ...(billingCycle && { billingCycle }),
+      ...(search && {
+        OR: [{ name: { contains: search, mode: 'insensitive' } }],
+      }),
+    };
+
+    const [products, totalCount] = await Promise.all([
+      this.prisma.product.findMany({
+        where,
+        skip,
+        take: Number(limit),
+        orderBy: { createdAt: 'desc' },
+      }),
+      this.prisma.product.count({ where }),
+    ]);
+
+    const totalPages = Math.ceil(totalCount / limit);
+    const hasNextPage = page < totalPages;
+    const hasPrevPage = page > 1;
     return {
-      message: 'Products fetched successfully',
-      data: products,
+      products,
+      pagination: {
+        currentPage: page,
+        perPage: limit,
+        totalUsers: totalCount,
+        totalPages,
+        hasNextPage,
+        hasPrevPage,
+        nextPage: hasNextPage ? page + 1 : null,
+        prevPage: hasPrevPage ? page - 1 : null,
+      },
     };
   }
 
