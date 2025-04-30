@@ -1,21 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useGetUsersQuery } from '@/lib/services/usersApi';
+import {
+  useDeleteUserMutation,
+  useGetUsersQuery,
+} from '@/lib/services/usersApi';
+import { useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { PencilIcon, Trash2Icon } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -25,15 +19,27 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Loader2, Trash2Icon } from 'lucide-react';
+import { UserUpdateModal } from '../_components/UserModal';
 
 const getStatusBadge = (status: string) => {
   switch (status.toUpperCase()) {
     case 'ACTIVE':
       return <Badge className="bg-green-600 text-white">Active</Badge>;
+    case 'PENDING':
+      return <Badge variant="outline">Pending</Badge>;
     case 'BLOCKED':
       return <Badge variant="destructive">Blocked</Badge>;
     case 'INACTIVE':
-      return <Badge variant="outline">Inactive</Badge>;
+      return <Badge className="bg-gray-600">Inactive</Badge>;
     default:
       return <Badge>{status}</Badge>;
   }
@@ -46,13 +52,14 @@ export default function AdminUsersPage() {
   const [page, setPage] = useState(1);
   const pageSize = 10;
 
-  const { data, isLoading, isError, error } = useGetUsersQuery({
+  const { data, isLoading, isError, } = useGetUsersQuery({
     page,
     limit: pageSize,
     search: query,
     status: statusFilter !== 'ALL' ? statusFilter : undefined,
     role: roleFilter !== 'ALL' ? roleFilter : undefined,
   });
+  const [deleteUser, { isLoading: isDeleting }] = useDeleteUserMutation();
 
   const users = data?.users || [];
   const pagination = data?.pagination;
@@ -114,12 +121,10 @@ export default function AdminUsersPage() {
                   <SelectItem value="ALL">Role</SelectItem>
                   <SelectItem value="ADMIN">ADMIN</SelectItem>
                   <SelectItem value="CUSTOMER">CUSTOMER</SelectItem>
-
                 </SelectGroup>
               </SelectContent>
             </Select>
           </div>
-          
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -151,18 +156,15 @@ export default function AdminUsersPage() {
                     </TableCell>
                     <TableCell>{getStatusBadge(user.status)}</TableCell>
                     <TableCell className="text-right space-x-2 ">
+                      <UserUpdateModal user={user} />
+
                       <Button
                         size="icon"
                         variant="ghost"
                         className="cursor-pointer"
+                        onClick={() => deleteUser(user.id)}
                       >
-                        <PencilIcon className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="cursor-pointer"
-                      >
+                        {isDeleting ? <Loader2 className="animate-spin" /> : null}
                         <Trash2Icon className="w-4 h-4 text-red-500" />
                       </Button>
                     </TableCell>

@@ -14,6 +14,8 @@ export const UpdateProductSchema = z.object({
       'SMS',
     ])
     .optional(),
+  billingCycle: z.enum(['MONTHLY', 'ANNUALLY', 'LIFETIME']).optional(),
+  status: z.enum(['ACTIVE', 'INACTIVE', 'PENDING']).optional(),
   description: z.string().optional(),
   price: z.number().min(0).optional(),
   config: z.any().optional(),
@@ -22,5 +24,3 @@ export const UpdateProductSchema = z.object({
 });
 
 export type UpdateProductDto = z.infer<typeof UpdateProductSchema>;
-
-

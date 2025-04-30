@@ -60,6 +60,14 @@ export class AuthService {
     }
 
     if (user.status !== 'ACTIVE') {
+      await this.prisma.loginHistory.create({
+        data: {
+          userId: user?.id,
+          ip: req.ip,
+          userAgent: req.headers['user-agent'],
+          attempt:"FAILED",
+        },
+      })
       throw new UnauthorizedException('User is not active');
     }
 
@@ -71,18 +79,21 @@ export class AuthService {
           userId: user?.id,
           ip: req.ip,
           userAgent: req.headers['user-agent'],
-          //TODOS ADD STATUS
+          attempt:"FAILED",
         },
       });
       throw new UnauthorizedException('Password is incorrect');
     }
 
+
+    //Updated login history
     await this.prisma.loginHistory.create({
       data: {
         userId: user?.id,
         ip: req.ip,
         userAgent: req.headers['user-agent'],
-        //TODOS ADD STATUS
+        attempt:"SUCCESS",
+        
       },
     });
 

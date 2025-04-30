@@ -2,6 +2,7 @@ import { AuthGuard } from './../auth/auth.guard';
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Put,
@@ -47,5 +48,10 @@ export class UserController {
   @Put(':id')
   updateUser(@Param('id') id: string, @Body() data: UpdateUserDto) {
     return this.userService.updateUser(id, data);
+  }
+
+  @Delete(':id')
+  deleteUser(@Param('id') id: string) {
+    return this.userService.deleteUser(id);
   }
 }

@@ -8,7 +8,7 @@ interface IGetUsersParams {
   search?: string;
 }
 
-interface IUser {
+export interface IUser {
   id: string;
   name: string;
   email: string;
@@ -49,7 +49,26 @@ export const usersApi = createApi({
       }),
       providesTags: ['Users'],
     }),
+    updateUser: builder.mutation<IUser, { id: string; data: Partial<IUser> }>({
+      query: ({ id, data }) => ({
+        url: `users/${id}`,
+        method: 'PUT',
+        body: data,
+      }),
+      invalidatesTags: ['Users'],
+    }),
+    deleteUser: builder.mutation<void, string>({
+      query: (id) => ({
+        url: `users/${id}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Users'],
+    }),
   }),
 });
 
-export const { useGetUsersQuery } = usersApi;
+export const {
+  useGetUsersQuery,
+  useUpdateUserMutation,
+  useDeleteUserMutation,
+} = usersApi;

@@ -8,11 +8,19 @@ import { getProductDto } from './common/dto/product.dto';
 export class ProductService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAll({ limit = 10, page = 1, type, billingCycle, search }: getProductDto) {
+  async findAll({
+    limit = 10,
+    page = 1,
+    type,
+    billingCycle,
+    search,
+    status,
+  }: getProductDto) {
     const skip = (page - 1) * limit;
 
     const where: any = {
       ...(type && { type }),
+      ...(status && { status }),
       ...(billingCycle && { billingCycle }),
       ...(search && {
         OR: [{ name: { contains: search, mode: 'insensitive' } }],

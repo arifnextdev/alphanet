@@ -18,4 +18,5 @@ export type getProductDto = {
   type?: string;
   billingCycle?: string;
   search?: string;
+  status?: string;
 };
