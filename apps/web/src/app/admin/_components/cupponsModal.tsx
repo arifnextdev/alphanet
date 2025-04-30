@@ -71,51 +71,53 @@ export default function CreateCouponModal({
             <Label>Code</Label>
             <Input name="code" value={form.code} onChange={handleChange} />
           </div>
-          <div>
-            <Label>Discount Type</Label>
-            <Select>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Theme" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="PERCENTAGE">Percentage</SelectItem>
-                <SelectItem value="FIXED">Fixed</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="flex items-center justify-between">
+            <div>
+              <Label>Discount Type</Label>
+              <Select>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Theme" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="PERCENTAGE">Percentage</SelectItem>
+                  <SelectItem value="FIXED">Fixed</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Expires At</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant={'outline'}
+                    className={cn(
+                      'w-[240px] justify-start text-left font-normal',
+                      !date && 'text-muted-foreground',
+                    )}
+                  >
+                    <CalendarIcon />
+                    {date ? format(date, 'PPP') : <span>Pick a date</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={date}
+                    onSelect={setDate}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
           </div>
-          <div>
+        
+          <div className="space-y-2">
             <Label>Discount Value</Label>
             <Input
-              type="number"
               name="discountValue"
               value={form.discountValue}
               onChange={handleChange}
             />
-          </div>
-          <div>
-            <Label>Expires At</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant={'outline'}
-                  className={cn(
-                    'w-[240px] justify-start text-left font-normal',
-                    !date && 'text-muted-foreground',
-                  )}
-                >
-                  <CalendarIcon />
-                  {date ? format(date, 'PPP') : <span>Pick a date</span>}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={date}
-                  onSelect={setDate}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
           </div>
           <Button className="w-full" onClick={handleSubmit}>
             Submit

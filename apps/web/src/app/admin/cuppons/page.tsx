@@ -13,9 +13,8 @@ import {
   TableBody,
   TableCell,
 } from '@/components/ui/table';
-import { PlusIcon } from 'lucide-react';
+import { PlusIcon, Trash2Icon } from 'lucide-react';
 import CreateCouponModal from '../_components/cupponsModal';
-
 
 const dummyCoupons = [
   {
@@ -96,6 +95,7 @@ export default function CouponsPage() {
                 <TableHead>Status</TableHead>
                 <TableHead>Expires</TableHead>
                 <TableHead>Created</TableHead>
+                <TableHead>Action</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -124,6 +124,11 @@ export default function CouponsPage() {
                     </TableCell>
                     <TableCell>{formatDate(c.expiresAt)}</TableCell>
                     <TableCell>{formatDate(c.createdAt)}</TableCell>
+                    <TableCell>
+                      <Button variant="destructive">
+                        <Trash2Icon className="w-4 h-4" />
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 ))
               ) : (

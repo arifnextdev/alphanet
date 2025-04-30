@@ -19,9 +19,10 @@ import { SettingService } from './product/setting/setting.service';
 import { UserController } from './user/user.controller';
 import { UserService } from './user/user.service';
 import { UserModule } from './user/user.module';
+import { CupponModule } from './cuppon/cuppon.module';
 
 @Module({
-  imports: [PrismaModule, AuthModule, ProductModule, OrderModule, UserModule],
+  imports: [PrismaModule, AuthModule, ProductModule, OrderModule, UserModule, CupponModule],
   controllers: [
     AppController,
     AuthController,
