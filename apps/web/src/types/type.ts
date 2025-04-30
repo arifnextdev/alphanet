@@ -50,3 +50,17 @@ export type ProductConfig = {
     smsCount: string;
   };
 };
+
+export type OrderStatus = 'PENDING' | 'COMPLETED' | 'CANCELLED';
+
+export interface OrderType {
+  id: string;
+  userId: string;
+  productId: string;
+  domainName?: string;
+  status: OrderStatus;
+  amount: number;
+  paidAt?: string; // ISO string (e.g. "2025-05-01T10:00:00Z")
+  expiresAt?: string; // ISO string
+  createdAt: string; // ISO string
+}

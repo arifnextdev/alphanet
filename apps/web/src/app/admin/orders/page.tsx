@@ -1,7 +1,20 @@
 'use client';
 
+import { useState } from 'react';
+
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   Table,
   TableBody,
@@ -10,91 +23,154 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { Trash2Icon } from 'lucide-react';
+import { OrderModalForm } from './_components/OrderModalForm';
+import { useGetOrdersQuery } from '@/lib/services/ordersApi';
 
-const orders = [
-  {
-    id: 'ord_001',
-    user: { name: 'John Doe' },
-    product: { name: 'Hosting Plan' },
-    domainName: 'example.com',
-    amount: 19.99,
-    status: 'PAID',
-    paidAt: new Date(),
-    expiresAt: new Date('2025-12-01'),
-  },
-  {
-    id: 'ord_002',
-    user: { name: 'Jane Smith' },
-    product: { name: 'Domain .com' },
-    domainName: 'janesmith.dev',
-    amount: 9.99,
-    status: 'PENDING',
-    paidAt: null,
-    expiresAt: null,
-  },
-];
+export default function OrderPage() {
+  const [query, setQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('ALL');
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
 
-const format = (date: Date) => {
-  return new Intl.DateTimeFormat('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  }).format(date);
-};
+  const { data, isLoading, isError } = useGetOrdersQuery({
+    page,
+    limit: pageSize,
+    search: query,
+    status: statusFilter !== 'ALL' ? statusFilter : undefined,
+  });
 
-const getStatusBadge = (status: string) => {
-  switch (status) {
-    case 'PAID':
-      return <Badge className="bg-green-600">Paid</Badge>;
-    case 'PENDING':
-      return <Badge variant="outline">Pending</Badge>;
-    case 'FAILED':
-      return <Badge variant="destructive">Failed</Badge>;
-    default:
-      return <Badge>{status}</Badge>;
-  }
-};
+  const orders = data?.orders || [];
+  const pagination = data?.pagination;
+  const totalPages = pagination?.totalPages || 1;
 
-export default function AdminOrdersPage() {
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader>
-          <CardTitle>Orders</CardTitle>
+        <CardHeader className="flex flex-row items-center justify-between border-b">
+          <CardTitle className="text-xl">Order List</CardTitle>
+          <div className="flex space-x-3">
+            <Input
+              type="search"
+              placeholder="Search by domain name..."
+              value={query}
+              onChange={(e) => {
+                setQuery(e.target.value);
+                setPage(1);
+              }}
+              className="max-w-sm"
+            />
+
+            <Select
+              value={statusFilter}
+              onValueChange={(v) => {
+                setStatusFilter(v);
+                setPage(1);
+              }}
+            >
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Select status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectLabel>Status</SelectLabel>
+                  <SelectItem value="ALL">All Statuses</SelectItem>
+                  <SelectItem value="ACTIVE">Active</SelectItem>
+                  <SelectItem value="INACTIVE">Inactive</SelectItem>
+                  <SelectItem value="PENDING">Pending</SelectItem>
+                  <SelectItem value="DELETED">Deleted</SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+
+            <OrderModalForm />
+          </div>
         </CardHeader>
+
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Order ID</TableHead>
-                <TableHead>Customer</TableHead>
-                <TableHead>Product</TableHead>
-                <TableHead>Domain</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Amount</TableHead>
-                <TableHead>Paid At</TableHead>
-                <TableHead>Expires At</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {orders.map((order) => (
-                <TableRow key={order.id}>
-                  <TableCell>{order.id}</TableCell>
-                  <TableCell>{order.user.name}</TableCell>
-                  <TableCell>{order.product.name}</TableCell>
-                  <TableCell>{order.domainName || '—'}</TableCell>
-                  <TableCell>{getStatusBadge(order.status)}</TableCell>
-                  <TableCell>${order.amount.toFixed(2)}</TableCell>
-                  <TableCell>
-                    {order.paidAt ? format(order.paidAt) : '—'}
-                  </TableCell>
-                  <TableCell>
-                    {order.expiresAt ? format(order.expiresAt) : '—'}
-                  </TableCell>
+          {isLoading ? (
+            <p>Loading...</p>
+          ) : isError ? (
+            <p className="text-red-500">Error loading orders</p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Domain</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Amount</TableHead>
+                  <TableHead>Paid At</TableHead>
+                  <TableHead>Expires At</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {orders.map((order: any) => (
+                  <TableRow key={order.id} className="group">
+                    <TableCell>{order.domainName || '—'}</TableCell>
+                    <TableCell>
+                      {order.status === 'ACTIVE' ? (
+                        <Badge className="bg-green-600 text-white">
+                          Active
+                        </Badge>
+                      ) : order.status === 'INACTIVE' ? (
+                        <Badge className="bg-secondary-foreground">
+                          Inactive
+                        </Badge>
+                      ) : order.status === 'PENDING' ? (
+                        <Badge variant="destructive">Pending</Badge>
+                      ) : (
+                        <Badge variant="destructive">Deleted</Badge>
+                      )}
+                    </TableCell>
+                    <TableCell>${order.amount}</TableCell>
+                    <TableCell>
+                      {order.paidAt
+                        ? new Date(order.paidAt).toLocaleDateString()
+                        : '—'}
+                    </TableCell>
+                    <TableCell>
+                      {order.expiresAt
+                        ? new Date(order.expiresAt).toLocaleDateString()
+                        : '—'}
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {orders.length === 0 && (
+                  <TableRow>
+                    <TableCell
+                      colSpan={6}
+                      className="text-center text-muted-foreground"
+                    >
+                      No orders found.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          )}
+
+          <div className="flex justify-between items-center mt-4">
+            <span className="text-sm text-muted-foreground">
+              Page {page} of {totalPages}
+            </span>
+            <div className="space-x-2">
+              <Button
+                variant="outline"
+                disabled={page <= 1}
+                onClick={() => setPage(page - 1)}
+              >
+                Previous
+              </Button>
+              <Button
+                variant="default"
+                disabled={page >= totalPages}
+                onClick={() => setPage(page + 1)}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>
