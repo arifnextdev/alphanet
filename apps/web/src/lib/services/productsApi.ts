@@ -1,6 +1,6 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
-interface IGetUsersParams {
+interface IGetProductParams {
   limit?: number;
   page?: number;
   status?: string;
@@ -40,7 +40,7 @@ export const productsApi = createApi({
   baseQuery: fetchBaseQuery({ baseUrl: 'http://localhost:3001/' }),
   tagTypes: ['Products'],
   endpoints: (builder) => ({
-    getProducts: builder.query<IGetUsersResponse, IGetUsersParams>({
+    getProducts: builder.query<IGetUsersResponse, IGetProductParams>({
       query: ({ limit = 10, page = 1, ...params }) => ({
         url: 'products',
         params: {

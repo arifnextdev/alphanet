@@ -8,3 +8,6 @@ export const CreateCupponSchema = z.object({
 });
 
 export type createCupponDto = z.infer<typeof CreateCupponSchema>;
+
+//update cuppon all partial
+

@@ -1,4 +1,4 @@
-'use client';
+import React, { useState } from 'react';
 
 import {
   Dialog,
@@ -7,12 +7,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { useState } from 'react';
-import { format } from 'date-fns';
-
+import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
@@ -26,21 +23,17 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
-import { CalendarIcon } from 'lucide-react';
+import { CalendarIcon, PencilIcon } from 'lucide-react';
+import { format } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
+import { useUpdateCupponMutation } from '@/lib/services/cuppons';
 
-export default function CreateCouponModal({
-  open,
-  setOpen,
-}: {
-  open: boolean;
-  setOpen: (val: boolean) => void;
-}) {
+const UpdateCupponModal = ({ cuppon }: { cuppon: any }) => {
+  const [open, setOpen] = useState(false);
   const [form, setForm] = useState({
-    code: '',
-    discountType: 'PERCENTAGE',
-    discountValue: '',
-    expiresAt: '',
+    discountValue: cuppon.discount,
+    status: cuppon.status,
+    expiesAt: cuppon.expiresAt,
   });
   const [date, setDate] = useState<Date>();
 
@@ -50,41 +43,53 @@ export default function CreateCouponModal({
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = () => {
-    console.log('Creating coupon:', form);
-    setOpen(false);
-    setForm({
-      code: '',
-      discountType: 'PERCENTAGE',
-      discountValue: '',
-      expiresAt: '',
-    });
-  };
+  const [updateCuppon, { isLoading, error, data }] = useUpdateCupponMutation();
 
+  const handleSubmit = () => {
+    //no change then return
+    if (
+      form.discountValue === cuppon.discount &&
+      form.expiesAt === cuppon.expiesAt &&
+      form.status === cuppon.status
+    ) {
+      return;
+    }
+    updateCuppon({
+      id: cuppon.id,
+      data: {
+        status: form.status === cuppon.status ? undefined : form.status,
+        discount: Number(form.discountValue),
+        expiesAt: form.expiesAt === cuppon.expiesAt ? undefined : form.expiesAt,
+      },
+    });
+    setOpen(false);
+  };
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline">Add Coupon</Button>
+        <Button variant="link">
+          <PencilIcon />
+        </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add New Coupon</DialogTitle>
+          <DialogTitle>Update Coupon</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
-          <div className="space-y-2">
-            <Label>Code</Label>
-            <Input name="code" value={form.code} onChange={handleChange} />
-          </div>
           <div className="flex items-center justify-between">
             <div>
-              <Label>Discount Type</Label>
-              <Select>
+              <Label>Cuppon Status</Label>
+              <Select
+                defaultValue={cuppon.status}
+                onValueChange={(v) => setForm({ ...form, status: v })}
+              >
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="Theme" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="PERCENTAGE">Percentage</SelectItem>
-                  <SelectItem value="FIXED">Fixed</SelectItem>
+                  <SelectItem value="ACTIVE">Active</SelectItem>
+                  <SelectItem value="INACTIVE">Inactive</SelectItem>
+                  <SelectItem value="EXPIRED">Expired</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -124,10 +129,12 @@ export default function CreateCouponModal({
             />
           </div>
           <Button className="w-full" onClick={handleSubmit}>
-            Submit
+            Update
           </Button>
         </div>
       </DialogContent>
     </Dialog>
   );
-}
+};
+
+export default UpdateCupponModal;

@@ -12,6 +12,7 @@ import {
 import { CupponService } from './cuppon.service';
 import { ZodValidationPipe } from 'src/product/common/zodValidationPipe';
 import { createCupponDto, CreateCupponSchema } from './dto/create.cuppon.dto';
+import { updateCupponDto } from './dto/update.cuppon.dto';
 
 @Controller('cuppons')
 export class CupponController {
@@ -25,12 +26,14 @@ export class CupponController {
   @Post()
   @UsePipes(new ZodValidationPipe(CreateCupponSchema))
   createCuppon(@Body() data: createCupponDto) {
+    // console.log(data);
     return this.cupponService.createCuppon(data);
   }
 
+  // @UsePipes(new ZodValidationPipe(updateCupponSchema))
   @Put(':id')
-  @UsePipes(new ZodValidationPipe(CreateCupponSchema))
-  updateCuppon(@Param('id') id: string, @Body() data: createCupponDto) {
+  updateCuppon(@Param('id') id: string, @Body() data: updateCupponDto) {
+    console.log(data);
     return this.cupponService.updateCuppon(id, data);
   }
 

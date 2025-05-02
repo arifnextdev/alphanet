@@ -9,9 +9,10 @@ interface IGetUsersParams {
 
 interface ICUPPON {
   id: string;
-  code: string;
+  code: number;
+  status: string;
   discount: number;
-  expiesAt: string | Date;
+  expiesAt: Date;
 }
 
 interface IPagination {
@@ -35,7 +36,7 @@ export const cupponsApi = createApi({
   baseQuery: fetchBaseQuery({ baseUrl: 'http://localhost:3001/' }),
   tagTypes: ['Coupons'],
   endpoints: (builder) => ({
-    getOrders: builder.query<IGetUsersResponse, IGetUsersParams>({
+    getCuppons: builder.query<IGetUsersResponse, IGetUsersParams>({
       query: ({ limit = 10, page = 1, ...params }) => ({
         url: 'cuppons',
         params: {
@@ -46,7 +47,7 @@ export const cupponsApi = createApi({
       }),
       providesTags: ['Coupons'],
     }),
-    createOrder: builder.mutation<ICUPPON, Partial<ICUPPON>>({
+    createCuppon: builder.mutation<ICUPPON, Partial<ICUPPON>>({
       query: (data) => ({
         url: 'cuppons',
         method: 'POST',
@@ -68,4 +69,8 @@ export const cupponsApi = createApi({
   }),
 });
 
-export const { useGetOrdersQuery, useCreateOrderMutation } = cupponsApi;
+export const {
+  useGetCupponsQuery,
+  useCreateCupponMutation,
+  useUpdateCupponMutation,
+} = cupponsApi;

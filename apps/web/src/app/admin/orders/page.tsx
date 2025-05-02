@@ -23,7 +23,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Trash2Icon } from 'lucide-react';
+import { Copy, PencilIcon, Trash2Icon } from 'lucide-react';
 import { OrderModalForm } from './_components/OrderModalForm';
 import { useGetOrdersQuery } from '@/lib/services/ordersApi';
 
@@ -133,6 +133,17 @@ export default function OrderPage() {
                       {order.expiresAt
                         ? new Date(order.expiresAt).toLocaleDateString()
                         : '—'}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        variant="ghost"
+                        className="p-1 cursor-copy"
+                        onClick={() => {
+                          navigator.clipboard.writeText(order.id);
+                        }}
+                      >
+                        <Copy size={16} />
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}

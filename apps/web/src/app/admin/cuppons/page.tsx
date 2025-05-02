@@ -1,48 +1,29 @@
 'use client';
 
-import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import {
   Table,
-  TableHeader,
-  TableRow,
-  TableHead,
   TableBody,
   TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from '@/components/ui/table';
-import { PlusIcon, Trash2Icon } from 'lucide-react';
+import { useGetCupponsQuery } from '@/lib/services/cuppons';
+import { Trash2Icon } from 'lucide-react';
+import { useState } from 'react';
 import CreateCouponModal from '../_components/cupponsModal';
+import UpdateCupponModal from '../_components/UpdateCupponModal';
 
-const dummyCoupons = [
-  {
-    _id: '1',
-    code: 'SAVE10',
-    discountType: 'PERCENTAGE',
-    discountValue: 10,
-    status: 'ACTIVE',
-    expiresAt: new Date('2025-06-01'),
-    createdAt: new Date('2024-04-01'),
-  },
-  {
-    _id: '2',
-    code: 'FLAT50',
-    discountType: 'FIXED',
-    discountValue: 50,
-    status: 'INACTIVE',
-    expiresAt: new Date('2024-04-10'),
-    createdAt: new Date('2024-02-01'),
-  },
-];
-
-const formatDate = (date: Date) =>
+const formatDate = (date: string | Date) =>
   new Intl.DateTimeFormat('en-US', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
-  }).format(date);
+  }).format(new Date(date));
 
 export default function CouponsPage() {
   const [query, setQuery] = useState('');
@@ -50,14 +31,14 @@ export default function CouponsPage() {
   const [page, setPage] = useState(1);
   const pageSize = 5;
 
-  const filtered = dummyCoupons.filter(
-    (c) =>
-      c.code.toLowerCase().includes(query.toLowerCase()) ||
-      c.status.toLowerCase().includes(query.toLowerCase()),
+  const { data, isLoading } = useGetCupponsQuery(
+    { page, limit: Number(pageSize), search: query },
+    { refetchOnMountOrArgChange: true },
   );
 
-  const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
-  const totalPages = Math.ceil(filtered.length / pageSize);
+  const coupons = data?.cuppons || [];
+
+  const today = new Date();
 
   return (
     <div className="space-y-6">
@@ -74,10 +55,7 @@ export default function CouponsPage() {
             }}
             className="max-w-sm"
           />
-          <Button onClick={() => setOpen(true)}>
-            <PlusIcon className="w-4 h-4 mr-2" />
-            Create
-          </Button>
+          <CreateCouponModal open={open} setOpen={setOpen} />
         </div>
       </div>
 
@@ -90,8 +68,7 @@ export default function CouponsPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Code</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Value</TableHead>
+                <TableHead>Discount</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Expires</TableHead>
                 <TableHead>Created</TableHead>
@@ -99,15 +76,14 @@ export default function CouponsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {paginated.length > 0 ? (
-                paginated.map((c) => (
-                  <TableRow key={c._id}>
+              {coupons.length > 0 ? (
+                coupons.map((c) => (
+                  <TableRow key={c.id}>
                     <TableCell>{c.code}</TableCell>
-                    <TableCell>{c.discountType}</TableCell>
                     <TableCell>
-                      {c.discountType === 'PERCENTAGE'
-                        ? `${c.discountValue}%`
-                        : `$${c.discountValue}`}
+                      {c.discount % 1 === 0
+                        ? `$${c.discount}`
+                        : `${c.discount}%`}
                     </TableCell>
                     <TableCell>
                       <Badge
@@ -122,12 +98,14 @@ export default function CouponsPage() {
                         {c.status}
                       </Badge>
                     </TableCell>
-                    <TableCell>{formatDate(c.expiresAt)}</TableCell>
-                    <TableCell>{formatDate(c.createdAt)}</TableCell>
+                    <TableCell
+                      className={`${c.expiesAt < today ? 'text-destructive' : 'text-green-500 font-semibold'}`}
+                    >
+                      {formatDate(c.expiesAt)}
+                    </TableCell>
+                    <TableCell>{formatDate(c.expiesAt)}</TableCell>
                     <TableCell>
-                      <Button variant="destructive">
-                        <Trash2Icon className="w-4 h-4" />
-                      </Button>
+                      <UpdateCupponModal cuppon={c} />
                     </TableCell>
                   </TableRow>
                 ))
@@ -146,14 +124,14 @@ export default function CouponsPage() {
 
           <div className="flex items-center justify-between mt-4">
             <span className="text-sm text-muted-foreground">
-              Page {page} of {totalPages}
+              Page {page} of {data?.pagination.totalPages || 1}
             </span>
             <div className="space-x-2">
               <Button disabled={page === 1} onClick={() => setPage(page - 1)}>
                 Previous
               </Button>
               <Button
-                disabled={page === totalPages}
+                disabled={page === data?.pagination.totalPages}
                 onClick={() => setPage(page + 1)}
               >
                 Next
@@ -162,8 +140,6 @@ export default function CouponsPage() {
           </div>
         </CardContent>
       </Card>
-
-      <CreateCouponModal open={open} setOpen={setOpen} />
     </div>
   );
 }

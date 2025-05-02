@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { createCupponDto } from './dto/create.cuppon.dto';
+import { updateCupponDto } from './dto/update.cuppon.dto';
 
 @Injectable()
 export class CupponService {
@@ -12,7 +13,7 @@ export class CupponService {
 
   async getCuppons({
     page = 1,
-    limit = 10,
+    limit = 5,
     status,
     search,
   }: {
@@ -29,11 +30,11 @@ export class CupponService {
         OR: [{ code: { contains: search, mode: 'insensitive' } }],
       }),
     };
-    const [users, totalCount] = await Promise.all([
+    const [cuppons, totalCount] = await Promise.all([
       this.prisma.coupon.findMany({
         where,
         skip,
-        take: limit,
+        take: Number(limit),
         orderBy: { createdAt: 'desc' },
       }),
       this.prisma.coupon.count({ where }),
@@ -44,7 +45,7 @@ export class CupponService {
     const hasPrevPage = page > 1;
 
     return {
-      users,
+      cuppons,
       pagination: {
         currentPage: page,
         perPage: limit,
@@ -70,8 +71,9 @@ export class CupponService {
     return await this.prisma.coupon.create({ data });
   }
 
-  async updateCuppon(id: string, data: createCupponDto) {
-    if (data.expiesAt < new Date())
+  async updateCuppon(id: string, data: updateCupponDto) {
+    console.log(data);
+    if (data.expiesAt && data.expiesAt < new Date())
       return { message: 'Expired Date is less than current date' };
 
     const cuppon = await this.prisma.coupon.update({
