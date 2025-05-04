@@ -3,7 +3,10 @@ import { z } from 'zod';
 export const CreateOrderSchema = z.object({
   userId: z.string().uuid(),
   productId: z.string().uuid(),
-  domainName: z.string().optional(),
+  domainName: z.string(),
+  email: z.string().email(),
+  username: z.string().optional(),
+  password: z.string().min(3).max(20),
 });
 
 export type OrederCreateDto = z.infer<typeof CreateOrderSchema>;

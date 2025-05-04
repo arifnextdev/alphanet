@@ -29,17 +29,20 @@ model User {
   id             String      @id @default(uuid())
   name           String?
   email          String      @unique
+  username       String?     @unique
   password       String?
   roles          Role[]      @default([CUSTOMER])
   avatar         String?
   status         UserStatus  @default(ACTIVE)
+  isEmailVerified Boolean     @default(false)
   provider       AuthProvider @default(CREDENTIAL)
   providerId     String?      // for Google/GitHub ID
+  resetToken     String?
   loginHistories LoginHistory[]
   orders         Order[]
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
-  @@index([email,createdAt])
+  @@index([email,status,username,createdAt])
 }
 
 enum AuthProvider {
@@ -51,7 +54,7 @@ enum AuthProvider {
 enum LoginHistoryStatus {
   SUCCESS
   FAILED
-  
+  LOCKED
 }
 
 model LoginHistory {
@@ -60,6 +63,7 @@ model LoginHistory {
   userId    String
   attempt   LoginHistoryStatus @default(SUCCESS)
   ip        String?
+  country   String?
   userAgent String?
   createdAt DateTime @default(now())
   @@index([userId,createdAt])
@@ -76,14 +80,25 @@ enum BillingCycle {
   MONTHLY
   ANNUALLY
   LIFETIME
+  ONE_TIME
+}
+
+enum ProductGrading {
+  FREE
+  BASIC
+  PREMIUM
+  ENTERPRISE
 }
 
 model Product {
   id          String   @id @default(uuid())
   name        String
   type        ProductType
+  quantity    Int?      @default(1)
+  grade       ProductGrading  @default(FREE)
   description String?
   price       Float    @default(0)
+  discount    Float    @default(0)
   config      Json?    
   isActive    Boolean  @default(true)
   isDeleted   Boolean  @default(false)
@@ -109,9 +124,10 @@ enum OrderStatus {
   PENDING
   PAID
   FAILED
-  ACTIVE
   EXPIRED
   CANCELLED
+  REFUNDED
+  ACTIVE
 }
 
 model Order {
@@ -122,7 +138,13 @@ model Order {
   productId   String
   domainName  String?     
   status      OrderStatus @default(PENDING)
+  currency    String?
+  transId     String?
+  tax         Float? @default(0)
+  discount    Float?  @default(0)
   amount      Float
+  subtotal    Float?  @default(0)
+  metadata    Json? 
   paidAt      DateTime?
   expiresAt   DateTime?
   createdAt   DateTime    @default(now())
@@ -137,6 +159,7 @@ enum PaymentStatus {
   SUCCESS
   FAILED
   CANCELLED
+  REFUNDED
 }
 
 enum PaymentMethod {
@@ -154,6 +177,7 @@ model Payment {
   method    PaymentMethod @default(SSLCOMMERZ) 
   status    PaymentStatus @default(PENDING)   
   currency  String?       @default("BDT")
+  metadata  Json?
   transId   String?
   amount    Float
   paidAt    DateTime @default(now())

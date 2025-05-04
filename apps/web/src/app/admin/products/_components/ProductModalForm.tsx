@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useCreateProductMutation } from '@/lib/services/productsApi';
+import { set } from 'date-fns';
 import { Loader2 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -29,11 +30,14 @@ export function ProductModalForm() {
   const [type, setType] = useState<string>('HOSTING');
   const [status, setStatus] = useState<string>('ACTIVE');
   const [billingCycle, setBillingCycle] = useState<string>('MONTHLY');
+  const [grade, setGrade] = useState<string>('BASIC');
 
   const [name, setName] = useState('');
   const [price, setPrice] = useState('');
   const [description, setDescription] = useState('');
-  const [config, setConfig] = useState <any>({});
+  const [quantity, setQuantity] = useState<string>('1');
+  const [discount, setDiscount] = useState('0');
+  const [config, setConfig] = useState<any>({});
 
   const handleTypeChange = (value: string) => {
     setType(value);
@@ -48,6 +52,9 @@ export function ProductModalForm() {
       type,
       description,
       price: parseFloat(price),
+      quantity: parseInt(quantity),
+      grade,
+      discount: parseFloat(discount),
       billingCycle,
       status,
       config,
@@ -207,6 +214,19 @@ export function ProductModalForm() {
             />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="price" className="text-right">
+              Discount
+            </Label>
+            <Input
+              id="discount"
+              type="number"
+              value={discount}
+              min={0}
+              onChange={(e) => setDiscount(e.target.value)}
+              className="col-span-3"
+            />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="description" className="text-right">
               Description
             </Label>
@@ -214,6 +234,17 @@ export function ProductModalForm() {
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
+              className="col-span-3"
+            />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="description" className="text-right">
+              Quantity
+            </Label>
+            <Input
+              id="quantity"
+              value={quantity}
+              onChange={(e) => setQuantity(e.target.value)}
               className="col-span-3"
             />
           </div>
@@ -230,6 +261,22 @@ export function ProductModalForm() {
                     <SelectGroup>
                       <SelectItem value="MONTHLY">Monthly</SelectItem>
                       <SelectItem value="ANNUALLY">Annually</SelectItem>
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </div>
+              {/* Product Grade */}
+              <div className="">
+                <Select value={grade} onValueChange={setGrade}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Select Product Grade" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectItem value="FREE">Free</SelectItem>
+                      <SelectItem value="BASIC">Basic</SelectItem>
+                      <SelectItem value="PREMIUM">Premium</SelectItem>
+                      <SelectItem value="ENTERPRISE">Enterprise</SelectItem>
                     </SelectGroup>
                   </SelectContent>
                 </Select>

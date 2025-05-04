@@ -30,15 +30,19 @@ export class AuthService {
 
     const hashPassword = await bcrypt.hash(dto.password, 10);
 
+    const username = this.#generateUniqueUserName(dto.name, dto.email);
+
     const user = await this.prisma.user.create({
       data: {
         email: dto.email,
         password: hashPassword,
         name: dto.name,
+        username,
       },
       select: {
         id: true,
         name: true,
+        username: true,
         email: true,
         avatar: true,
         roles: true,
@@ -65,9 +69,9 @@ export class AuthService {
           userId: user?.id,
           ip: req.ip,
           userAgent: req.headers['user-agent'],
-          attempt:"FAILED",
+          attempt: 'FAILED',
         },
-      })
+      });
       throw new UnauthorizedException('User is not active');
     }
 
@@ -79,12 +83,11 @@ export class AuthService {
           userId: user?.id,
           ip: req.ip,
           userAgent: req.headers['user-agent'],
-          attempt:"FAILED",
+          attempt: 'FAILED',
         },
       });
       throw new UnauthorizedException('Password is incorrect');
     }
-
 
     //Updated login history
     await this.prisma.loginHistory.create({
@@ -92,8 +95,7 @@ export class AuthService {
         userId: user?.id,
         ip: req.ip,
         userAgent: req.headers['user-agent'],
-        attempt:"SUCCESS",
-        
+        attempt: 'SUCCESS',
       },
     });
 
@@ -162,5 +164,13 @@ export class AuthService {
     } catch (error) {
       throw new UnauthorizedException('Invalid token');
     }
+  }
+
+  #generateUniqueUserName(name, email) {
+    //total 10 characters use first name, id last 3 characters and first 3 characters of email and new date last 3
+
+    return `${email.split('@')[0]}_${new Date().getMilliseconds()}_${name
+      .split(' ')[0]
+      .slice(0, 2)}`;
   }
 }

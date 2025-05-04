@@ -14,6 +14,9 @@ export interface IProduct {
   type: string;
   description: string;
   status: string;
+  quantity: number;
+  discount: number;
+  grade: string;
   price: number;
   billingCycle: string;
   config: any;

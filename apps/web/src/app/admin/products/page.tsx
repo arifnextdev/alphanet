@@ -131,6 +131,9 @@ export default function AdminProductsPage() {
                   <TableHead>Name</TableHead>
                   <TableHead>Type</TableHead>
                   <TableHead>Price</TableHead>
+                  <TableHead>Discount</TableHead>
+                  <TableHead>Quantity</TableHead>
+                  <TableHead>Grade</TableHead>
                   <TableHead>Billing Cycle</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
@@ -144,6 +147,9 @@ export default function AdminProductsPage() {
                       <Badge variant="outline">{product.type}</Badge>
                     </TableCell>
                     <TableCell>${product.price}</TableCell>
+                    <TableCell>${product.discount}</TableCell>
+                    <TableCell>{product.quantity}</TableCell>
+                    <TableCell>{product.grade}</TableCell>
                     <TableCell>{product.billingCycle}</TableCell>
                     <TableCell>
                       {product.status === 'ACTIVE' ? (
@@ -151,7 +157,9 @@ export default function AdminProductsPage() {
                           Active
                         </Badge>
                       ) : product.status === 'INACTIVE' ? (
-                        <Badge className='bg-secondary-foreground '>Inactive</Badge>
+                        <Badge className="bg-secondary-foreground ">
+                          Inactive
+                        </Badge>
                       ) : product.status === 'PENDING' ? (
                         <Badge variant="destructive">Pending</Badge>
                       ) : (

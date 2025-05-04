@@ -23,9 +23,9 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Copy, PencilIcon, Trash2Icon } from 'lucide-react';
-import { OrderModalForm } from './_components/OrderModalForm';
 import { useGetOrdersQuery } from '@/lib/services/ordersApi';
+import { Copy } from 'lucide-react';
+import { OrderModalForm } from './_components/OrderModalForm';
 
 export default function OrderPage() {
   const [query, setQuery] = useState('');
@@ -99,6 +99,7 @@ export default function OrderPage() {
                   <TableHead>Domain</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Amount</TableHead>
+                  <TableHead>metadata</TableHead>
                   <TableHead>Paid At</TableHead>
                   <TableHead>Expires At</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
@@ -118,12 +119,13 @@ export default function OrderPage() {
                           Inactive
                         </Badge>
                       ) : order.status === 'PENDING' ? (
-                        <Badge variant="destructive">Pending</Badge>
+                        <Badge className="bg-yellow-600">Pending</Badge>
                       ) : (
-                        <Badge variant="destructive">Deleted</Badge>
+                        <Badge variant="destructive">Faild</Badge>
                       )}
                     </TableCell>
                     <TableCell>${order.amount}</TableCell>
+                    <TableCell>{order.metadata}</TableCell>
                     <TableCell>
                       {order.paidAt
                         ? new Date(order.paidAt).toLocaleDateString()

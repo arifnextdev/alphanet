@@ -24,50 +24,52 @@ import {
 import { Loader2 } from 'lucide-react';
 
 import { useCreateOrderMutation } from '@/lib/services/ordersApi';
-import { useGetProductsQuery } from '@/lib/services/productsApi';
+import { IProduct, useGetProductsQuery } from '@/lib/services/productsApi';
+import { set } from 'date-fns';
+import { Textarea } from '@/components/ui/textarea';
 
 export function OrderModalForm() {
-  const [status, setStatus] = useState('PENDING');
-  const [amount, setAmount] = useState('');
   const [domainName, setDomainName] = useState('');
-  const [query, setQuery] = useState('');
-  const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
-  const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(
+    null,
+  );
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [userId, setUserId] = useState('');
+  const [productType, setProductType] = useState<string>('HOSTING');
+  const [products, setProducts] = useState<IProduct[]>([]);
+  const [email, setEmail] = useState('');
 
   const [createOrder, { isLoading }] = useCreateOrderMutation();
-
-  const { data: productData } = useGetProductsQuery({ search: query });
+  const { data } = useGetProductsQuery({ type: productType, limit: 10 });
 
   useEffect(() => {
-    const found = productData?.products?.find(
-      (p: any) => p.id === selectedProductId
-    );
-    if (found) {
-      setSelectedProduct(found);
-      setAmount(found.price.toString());
-    } else {
-      setSelectedProduct(null);
-    }
-  }, [selectedProductId, productData]);
+    if (data?.products) setProducts(data?.products || []);
+  });
 
   const handleOrderAdd = () => {
-    if (!selectedProduct) return;
+    if (!selectedProductId) return;
 
     const orderData = {
-      status,
-      amount: parseFloat(amount),
       domainName,
-      productId: selectedProduct.id,
+      productId: selectedProductId,
+      username,
+      email,
+      password,
+      userId,
     };
+
+    // console.log(orderData);
 
     createOrder(orderData);
     // Reset
-    setStatus('PENDING');
-    setAmount('');
-    setDomainName('');
-    setSelectedProductId(null);
-    setSelectedProduct(null);
-    setQuery('');
+    // setUsername('');
+    // setPassword('');
+    // setUserId('');
+    // setEmail('');
+    // setDomainName('');
+    // setSelectedProductId(null);
+    // setSelectedProduct(null);
   };
 
   return (
@@ -89,13 +91,23 @@ export function OrderModalForm() {
             <Label htmlFor="search" className="text-right">
               Search Product
             </Label>
-            <Input
-              id="search"
-              placeholder="Type product name"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              className="col-span-3"
-            />
+            <Select value={productType} onValueChange={setProductType}>
+              <SelectTrigger className="col-span-3">
+                <SelectValue placeholder="Select Product Type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectItem value="HOSTING">Hosting</SelectItem>
+                  <SelectItem value="DOMAIN">Domain</SelectItem>
+                  <SelectItem value="VPS">VPS</SelectItem>
+                  <SelectItem value="CLOUD">Cloud</SelectItem>
+                  <SelectItem value="DEDICATED">Dedicated</SelectItem>
+                  <SelectItem value="EMAIL">Email</SelectItem>
+                  <SelectItem value="SSL">SSL</SelectItem>
+                  <SelectItem value="SMS">SMS</SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
           </div>
 
           {/* ✅ Product Dropdown */}
@@ -104,15 +116,15 @@ export function OrderModalForm() {
               Product
             </Label>
             <Select
-              value={selectedProductId || ''}
+              value={selectedProductId ? selectedProductId : 'select a product'}
               onValueChange={(val) => setSelectedProductId(val)}
             >
               <SelectTrigger className="col-span-3">
-                {selectedProduct ? selectedProduct.name : 'Select a product'}
+                {selectedProductId ? selectedProductId : 'Select a product'}
               </SelectTrigger>
               <SelectContent>
                 <SelectGroup>
-                  {productData?.products?.map((product: any) => (
+                  {products?.map((product: IProduct) => (
                     <SelectItem key={product.id} value={product.id}>
                       {product.name}
                     </SelectItem>
@@ -122,25 +134,57 @@ export function OrderModalForm() {
             </Select>
           </div>
 
-          {/* 💰 Price Display */}
-          {selectedProduct && (
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="price" className="text-right">
-                Price
-              </Label>
-              <Input
-                id="price"
-                value={selectedProduct.price}
-                readOnly
-                className="col-span-3"
-              />
-            </div>
-          )}
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="price" className="text-right">
+              userId
+            </Label>
+            <Input
+              id="userId"
+              value={userId}
+              onChange={(e) => setUserId(e.target.value)}
+              className="col-span-3"
+            />
+          </div>
+
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="price" className="text-right">
+              Username
+            </Label>
+            <Input
+              id="username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              className="col-span-3"
+            />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="price" className="text-right">
+              Email
+            </Label>
+            <Input
+              id="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="col-span-3"
+            />
+          </div>
+
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="price" className="text-right">
+              Password
+            </Label>
+            <Input
+              id="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="col-span-3"
+            />
+          </div>
 
           {/* 🌐 Domain Name */}
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="domainName" className="text-right">
-              Domain Name (Optional)
+              Domain Name
             </Label>
             <Input
               id="domainName"
@@ -149,47 +193,19 @@ export function OrderModalForm() {
               className="col-span-3"
             />
           </div>
-
-          {/* 💵 Amount */}
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="amount" className="text-right">
-              Amount
-            </Label>
-            <Input
-              id="amount"
-              type="number"
-              value={amount}
-              min={0}
-              onChange={(e) => setAmount(e.target.value)}
-              className="col-span-3"
-            />
-          </div>
-
-          {/* 🔁 Status Dropdown */}
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="status" className="text-right">
-              Status
-            </Label>
-            <Select value={status} onValueChange={setStatus}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Select Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  <SelectItem value="PENDING">Pending</SelectItem>
-                  <SelectItem value="COMPLETED">Completed</SelectItem>
-                  <SelectItem value="CANCELLED">Cancelled</SelectItem>
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-          </div>
         </div>
 
         <DialogFooter>
           <Button
             type="submit"
             onClick={handleOrderAdd}
-            disabled={isLoading || !selectedProductId || !amount || !status}
+            disabled={
+              isLoading ||
+              !selectedProductId ||
+              !userId ||
+              !username ||
+              !password
+            }
           >
             {isLoading ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />

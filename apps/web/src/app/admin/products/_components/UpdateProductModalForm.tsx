@@ -33,6 +33,9 @@ export function UpdateProductModalForm({ product }: { product: IProduct }) {
   const [name, setName] = useState('');
   const [price, setPrice] = useState('');
   const [description, setDescription] = useState('');
+  const [quantity, setQuantity] = useState('');
+  const [grade, setGrade] = useState('');
+  const [discount, setDiscount] = useState('');
   const [config, setConfig] = useState<any>({});
 
   const [updateProduct, { isLoading }] = useUpdateProductMutation();
@@ -42,6 +45,9 @@ export function UpdateProductModalForm({ product }: { product: IProduct }) {
       setName(product.name);
       setType(product.type);
       setStatus(product.status);
+      setQuantity(product.quantity?.toString() || '');
+      setDiscount(product.discount?.toString() || '');
+      setGrade(product.grade);
       setBillingCycle(product.billingCycle);
       setPrice(product.price?.toString() || '');
       setDescription(product.description);
@@ -57,6 +63,9 @@ export function UpdateProductModalForm({ product }: { product: IProduct }) {
       status,
       billingCycle,
       price: parseFloat(price),
+      quantity: parseInt(quantity),
+      discount: parseFloat(discount),
+      grade,
       description,
       config,
     };
@@ -204,6 +213,26 @@ export function UpdateProductModalForm({ product }: { product: IProduct }) {
             />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
+            <Label className="text-right">Discount</Label>
+            <Input
+              type="number"
+              value={discount}
+              onChange={(e) => setDiscount(e.target.value)}
+              className="col-span-3"
+              min={0}
+            />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label className="text-right">Quantity</Label>
+            <Input
+              type="number"
+              value={quantity}
+              onChange={(e) => setQuantity(e.target.value)}
+              className="col-span-3"
+              min={0}
+            />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
             <Label className="text-right">Description</Label>
             <Textarea
               value={description}
@@ -222,6 +251,19 @@ export function UpdateProductModalForm({ product }: { product: IProduct }) {
                   <SelectGroup>
                     <SelectItem value="MONTHLY">Monthly</SelectItem>
                     <SelectItem value="ANNUALLY">Annually</SelectItem>
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+              <Select value={grade} onValueChange={setGrade}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Product Grade" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectItem value="FREE">Free</SelectItem>
+                    <SelectItem value="BASIC">Basic</SelectItem>
+                    <SelectItem value="PREMIUM">Premium</SelectItem>
+                    <SelectItem value="ENTERPRISE">Enterprise</SelectItem>
                   </SelectGroup>
                 </SelectContent>
               </Select>

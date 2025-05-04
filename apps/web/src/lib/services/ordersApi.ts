@@ -12,8 +12,11 @@ export interface IOrder {
   userId: string;
   productId: string;
   domainName?: string;
+  username?: string;
+  password?: string;
+  metadata?: string;
   status: string;
-  amount: number;
+  amount?: number | null;
   paidAt?: Date | string | undefined; // ISO string (e.g. "2025-05-01T10:00:00Z")
   expiresAt?: Date | string; // ISO string
   //   createdAt: Date | string; // ISO str
@@ -21,8 +24,12 @@ export interface IOrder {
 
 export interface CreateOrderPayload {
   domainName?: string;
-  status?: string;
-  amount: number;
+  userId: string;
+  productId: string;
+  username: string;
+  email: string;
+  password: string;
+  metadata?: string;
 }
 
 interface IPagination {
@@ -57,7 +64,7 @@ export const ordersApi = createApi({
       }),
       providesTags: ['Orders'],
     }),
-    createOrder: builder.mutation<IOrder, CreateOrderPayload>({
+    createOrder: builder.mutation<Partial<IOrder>, CreateOrderPayload>({
       query: (data) => ({
         url: 'Orders',
         method: 'POST',

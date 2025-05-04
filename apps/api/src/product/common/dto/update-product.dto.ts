@@ -15,6 +15,9 @@ export const UpdateProductSchema = z.object({
     ])
     .optional(),
   billingCycle: z.enum(['MONTHLY', 'ANNUALLY', 'LIFETIME']).optional(),
+  quantity: z.number().min(0).optional(),
+  discount: z.number().min(0).optional(),
+  grade: z.enum(['FREE', 'BASIC', 'PREMIUM']).default('FREE').optional(),
   status: z.enum(['ACTIVE', 'INACTIVE', 'PENDING']).optional(),
   description: z.string().optional(),
   price: z.number().min(0).optional(),
