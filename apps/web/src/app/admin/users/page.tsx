@@ -27,8 +27,9 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Loader2, Trash2Icon } from 'lucide-react';
+import { EyeIcon, Loader2, Trash2Icon } from 'lucide-react';
 import { UserUpdateModal } from '../_components/UserModal';
+import Link from 'next/link';
 
 const getStatusBadge = (status: string) => {
   switch (status.toUpperCase()) {
@@ -52,7 +53,7 @@ export default function AdminUsersPage() {
   const [page, setPage] = useState(1);
   const pageSize = 10;
 
-  const { data, isLoading, isError, } = useGetUsersQuery({
+  const { data, isLoading, isError } = useGetUsersQuery({
     page,
     limit: pageSize,
     search: query,
@@ -155,8 +156,12 @@ export default function AdminUsersPage() {
                       ))}
                     </TableCell>
                     <TableCell>{getStatusBadge(user.status)}</TableCell>
-                    <TableCell className="text-right space-x-2 ">
+                    <TableCell className="text-right space-x-2 flex items-center justify-end">
                       <UserUpdateModal user={user} />
+
+                      <Link href={`/admin/users/${user.id}`}>
+                        <EyeIcon className="w-4 h-4 text-blue-500" />
+                      </Link>
 
                       <Button
                         size="icon"
@@ -164,7 +169,9 @@ export default function AdminUsersPage() {
                         className="cursor-pointer"
                         onClick={() => deleteUser(user.id)}
                       >
-                        {isDeleting ? <Loader2 className="animate-spin" /> : null}
+                        {isDeleting ? (
+                          <Loader2 className="animate-spin" />
+                        ) : null}
                         <Trash2Icon className="w-4 h-4 text-red-500" />
                       </Button>
                     </TableCell>

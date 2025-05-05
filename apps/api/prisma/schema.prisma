@@ -30,6 +30,7 @@ model User {
   name           String?
   email          String      @unique
   username       String?     @unique
+  phone          String?
   password       String?
   roles          Role[]      @default([CUSTOMER])
   avatar         String?
@@ -38,11 +39,12 @@ model User {
   provider       AuthProvider @default(CREDENTIAL)
   providerId     String?      // for Google/GitHub ID
   resetToken     String?
-  loginHistories LoginHistory[]
-  orders         Order[]
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
-  @@index([email,status,username,createdAt])
+  loginHistories LoginHistory[]
+  orders         Order[]
+  payments       Payment[]
+  @@index([email,status,username,createdAt,phone])
 }
 
 enum AuthProvider {
@@ -97,8 +99,10 @@ model Product {
   quantity    Int?      @default(1)
   grade       ProductGrading  @default(FREE)
   description String?
+  vat         Float   @default(0)
+  tax         Float   @default(0)
   price       Float    @default(0)
-  discount    Float    @default(0)
+  discount    Float?    @default(0)
   config      Json?    
   isActive    Boolean  @default(true)
   isDeleted   Boolean  @default(false)
@@ -138,12 +142,7 @@ model Order {
   productId   String
   domainName  String?     
   status      OrderStatus @default(PENDING)
-  currency    String?
-  transId     String?
-  tax         Float? @default(0)
-  discount    Float?  @default(0)
-  amount      Float
-  subtotal    Float?  @default(0)
+  amount      Float       @default(0)
   metadata    Json? 
   paidAt      DateTime?
   expiresAt   DateTime?
@@ -156,6 +155,7 @@ model Order {
 
 enum PaymentStatus {
   PENDING
+  DUE
   SUCCESS
   FAILED
   CANCELLED
@@ -163,25 +163,35 @@ enum PaymentStatus {
 }
 
 enum PaymentMethod {
-  STRIPE
   SSLCOMMERZ
-  PAYPAL
+  BIKASH
+  NAGAD
+  BANK
+  CASH
+  CUSTOM
 }
 
 
 
 model Payment {
   id        String   @id @default(uuid())
-  order     Order    @relation(fields: [orderId], references: [id])
+  userId    String 
   orderId   String
-  method    PaymentMethod @default(SSLCOMMERZ) 
-  status    PaymentStatus @default(PENDING)   
+  method    PaymentMethod? @default(CUSTOM) 
+  status    PaymentStatus? @default(DUE)   
   currency  String?       @default("BDT")
-  metadata  Json?
   transId   String?
   amount    Float
+  tax       Float? @default(0)
+  vat       Float? @default(0)
+  discount  Float? @default(0)
+  subtotal  Float? @default(0)
+  metadata  Json?
+  createdAt DateTime @default(now())
   paidAt    DateTime @default(now())
-  @@index([orderId,paidAt])
+  user      User @relation(fields: [userId],references: [id])
+  order     Order    @relation(fields: [orderId], references: [id])
+  @@index([userId,status,transId,orderId,paidAt])
 }
 
 model Setting {

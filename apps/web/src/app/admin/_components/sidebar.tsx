@@ -10,10 +10,12 @@ import {
   Package,
   Settings,
   Users,
+  Wallet,
 } from 'lucide-react';
 
 const navItems = [
   { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
+  { name: 'Transections', href: '/admin/dashboard/transection', icon: Wallet },
   { name: 'Products', href: '/admin/products', icon: Package },
   { name: 'Orders', href: '/admin/orders', icon: ListOrderedIcon },
   { name: 'Users', href: '/admin/users', icon: Users },

@@ -12,6 +12,7 @@ import {
 import { OrderService } from './order.service';
 import {
   CreateOrderSchema,
+  GetFilterDto,
   GetOrderDto,
   OrederCreateDto,
 } from '../common/dto/order.dto';
@@ -45,5 +46,10 @@ export class OrderController {
   @Delete(':id')
   deleteOrder(@Param('id') id: string) {
     return this.orderService.deleteOrder(id);
+  }
+
+  @Get('/transection/details')
+  getTransaction(@Query() query: GetFilterDto) {
+    return this.orderService.getTransaction(query);
   }
 }

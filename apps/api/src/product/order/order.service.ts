@@ -1,5 +1,14 @@
 import { HttpService } from '@nestjs/axios';
 import {
+  startOfDay,
+  endOfDay,
+  subDays,
+  startOfMonth,
+  endOfMonth,
+  addDays,
+} from 'date-fns';
+
+import {
   ConflictException,
   Injectable,
   NotFoundException,
@@ -67,13 +76,179 @@ export class OrderService {
   }
 
   async findOne(id: string) {
-    const order = await this.prisma.order.findUnique({ where: { id } });
+    const order = await this.prisma.order.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        domainName: true,
+        amount: true,
+        paidAt: true,
+        expiresAt: true,
+        status: true,
+        product: {
+          select: {
+            name: true,
+            billingCycle: true,
+            price: true,
+            discount: true,
+            tax: true,
+            vat: true,
+          },
+        },
+        payments: {
+          select: {
+            id: true,
+            amount: true,
+            method: true,
+            transId: true,
+            currency: true,
+            tax: true,
+            vat: true,
+            discount: true,
+            subtotal: true,
+            status: true,
+            createdAt: true,
+            paidAt: true,
+            metadata: true,
+          },
+        },
+      },
+    });
     if (!order) {
       throw new NotFoundException('Order not found');
     }
     return order;
   }
 
+  async getOrdersExpiringOn(date: Date) {
+    const orders = await this.prisma.order.findMany({
+      where: { expiresAt: { lte: date } },
+    });
+    return orders;
+  }
+
+  async getTransaction({
+    dateRange,
+    status,
+  }: {
+    dateRange:
+      | 'today'
+      | 'tomorrow'
+      | 'last7days'
+      | 'last15days'
+      | 'last30days'
+      | 'lastmonth';
+    status?: string;
+  }) {
+    console.log(dateRange);
+    const now = new Date();
+    let from: Date, to: Date;
+
+    switch (dateRange) {
+      case 'today':
+        from = startOfDay(now);
+        to = endOfDay(now);
+        break;
+      case 'tomorrow':
+        from = startOfDay(addDays(now, 1));
+        to = endOfDay(addDays(now, 1));
+        break;
+      case 'last7days':
+        from = startOfDay(subDays(now, 6));
+        to = endOfDay(now);
+        break;
+      case 'last15days':
+        from = startOfDay(subDays(now, 14));
+        to = endOfDay(now);
+        break;
+      case 'last30days':
+        from = startOfDay(subDays(now, 29));
+        to = endOfDay(now);
+        break;
+      case 'lastmonth':
+        from = startOfMonth(subDays(now, now.getDate()));
+        to = endOfMonth(subDays(now, now.getDate()));
+        break;
+      default:
+        from = new Date(0);
+        to = now;
+    }
+
+    const whereClause: any = {
+      createdAt: {
+        gte: from,
+        lte: to,
+      },
+    };
+
+    const finalStatus = status === 'all' ? undefined : status;
+
+    if (finalStatus) {
+      whereClause.status = finalStatus;
+    }
+
+    const transactions = await this.prisma.payment.findMany({
+      where: whereClause,
+      select: {
+        id: true,
+        amount: true,
+        method: true,
+        transId: true,
+        currency: true,
+        tax: true,
+        vat: true,
+        discount: true,
+        subtotal: true,
+        status: true,
+        createdAt: true,
+        paidAt: true,
+        metadata: true,
+        order: {
+          select: {
+            id: true,
+            domainName: true,
+            amount: true,
+            paidAt: true,
+            expiresAt: true,
+            status: true,
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                avatar: true,
+                roles: true,
+                status: true,
+              },
+            },
+            product: {
+              select: {
+                name: true,
+                billingCycle: true,
+                price: true,
+                discount: true,
+                tax: true,
+                vat: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const summary = transactions.reduce(
+      (acc, trx) => {
+        acc.totalAmount += trx.amount || 0;
+        acc.totalTax += trx.tax || 0;
+        acc.totalVat += trx.vat || 0;
+        acc.totalDiscount += trx.discount || 0;
+        return acc;
+      },
+      { totalAmount: 0, totalTax: 0, totalVat: 0, totalDiscount: 0 },
+    );
+
+    return { transactions, summary };
+  }
   // async createOrder(data: OrederCreateDto) {
   //   const [user, product] = await Promise.all([
   //     this.#ValidateUser(data.userId),
@@ -169,7 +344,7 @@ export class OrderService {
     }
 
     const expiresAt = this.calculateExpiryDate(product.billingCycle);
-    const password = this.generateRandomPassword(); // Implement this
+    const password = this.generateRandomPassword();
     let plan = 'neyamot_default';
 
     if (product.grade === 'BASIC') {
@@ -178,60 +353,94 @@ export class OrderService {
       plan = 'neyamot_default';
     }
 
+    /// calculate price with discount vat and tax
+
+    const price = product.price;
+    const discountRate = product.discount || 0;
+    const taxRate = product.tax || 0;
+    const vatRate = product.vat || 0;
+
+    // 1. Calculate discounted amount
+    const discountAmount = (price * discountRate) / 100;
+    const discountedPrice = price - discountAmount;
+
+    // 2. Calculate tax and VAT based on discounted price
+    const taxAmount = (discountedPrice * taxRate) / 100;
+    const vatAmount = (discountedPrice * vatRate) / 100;
+
+    // 3. Final total (subtotal)
+    const total = discountedPrice + taxAmount + vatAmount;
+
     const order = await this.prisma.order.create({
       data: {
         userId: user.id,
         productId: product.id,
         domainName: data.domainName,
-        amount: product.price,
+        amount: price,
         expiresAt,
+        status: 'PENDING',
+        payments: {
+          create: {
+            userId: user.id,
+            amount: product.price,
+            vat: vatAmount,
+            tax: taxAmount,
+            discount: discountedPrice,
+            subtotal: total,
+          },
+        },
       },
     });
 
-    try {
-      const cpanelAccount = await this.createCpanelAccount({
-        userName: user.username || 'defaultuser',
-        password,
-        email: data.email || user.email, // Use user's email
-        domain: data.domainName || 'defaultdomain.com',
-        plan: plan,
-      });
+    return order;
 
-      if (!cpanelAccount.success === true) {
-        throw new NotFoundException('Cpanel Account not created');
-      }
+    // try {
+    //   const cpanelAccount = await this.createCpanelAccount({
+    //     userName: user.username || 'defaultuser',
+    //     password,
+    //     email: data.email || user.email, // Use user's email
+    //     domain: data.domainName || 'defaultdomain.com',
+    //     plan: plan,
+    //   });
 
-      const metadata = {
-        userName: user.username,
-        password,
-        email: data.email,
-        domain: data.domainName,
-        plan: plan, // From product
-      };
+    //   if (!cpanelAccount.success === true) {
+    //     throw new NotFoundException('Cpanel Account not created');
+    //   }
 
-      await this.prisma.order.update({
-        where: { id: order.id },
-        data: {
-          status: 'PAID',
-          metadata: JSON.stringify(metadata),
-        },
-      });
+    //   const metadata = {
+    //     userName: user.username,
+    //     password,
+    //     email: data.email,
+    //     domain: data.domainName,
+    //     plan: plan, // From product
+    //   };
 
-      return {
-        order,
-        cpanelAccount,
-        temporaryPassword: password,
-      };
-    } catch (error) {
-      await this.prisma.order.update({
-        where: { id: order.id },
-        data: {
-          status: 'FAILED',
-        },
-      });
-      throw new ConflictException('Order created but cPanel setup failed');
-    }
+    //   await this.prisma.order.update({
+    //     where: { id: order.id },
+    //     data: {
+    //       status: 'PAID',
+    //       metadata: JSON.stringify(metadata),
+    //     },
+    //   });
+
+    //   return {
+    //     order,
+    //     cpanelAccount,
+    //     temporaryPassword: password,
+    //   };
+    // } catch (error) {
+    //   await this.prisma.order.update({
+    //     where: { id: order.id },
+    //     data: {
+    //       status: 'FAILED',
+    //     },
+    //   });
+    //   throw new ConflictException('Order created but cPanel setup failed');
+    // }
   }
+
+  //Create Due Payment
+  async createDueInvoice(order: OrederCreateDto) {}
 
   private calculateExpiryDate(billingCycle: string): Date {
     const date = new Date();

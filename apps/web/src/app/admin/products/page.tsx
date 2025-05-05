@@ -27,9 +27,10 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Trash2Icon } from 'lucide-react';
+import { EyeIcon, Trash2Icon } from 'lucide-react';
 import { ProductModalForm } from './_components/ProductModalForm';
 import { UpdateProductModalForm } from './_components/UpdateProductModalForm';
+import Link from 'next/link';
 
 export default function AdminProductsPage() {
   const [query, setQuery] = useState('');
@@ -132,6 +133,8 @@ export default function AdminProductsPage() {
                   <TableHead>Type</TableHead>
                   <TableHead>Price</TableHead>
                   <TableHead>Discount</TableHead>
+                  <TableHead>Tax</TableHead>
+                  <TableHead>Vat</TableHead>
                   <TableHead>Quantity</TableHead>
                   <TableHead>Grade</TableHead>
                   <TableHead>Billing Cycle</TableHead>
@@ -146,8 +149,20 @@ export default function AdminProductsPage() {
                     <TableCell>
                       <Badge variant="outline">{product.type}</Badge>
                     </TableCell>
-                    <TableCell>${product.price}</TableCell>
-                    <TableCell>${product.discount}</TableCell>
+                    <TableCell>{product.price}TK</TableCell>
+                    <TableCell>
+                      <span>{product.discount}%</span> |{' '}
+                      <span>{product.price * (product.discount / 100)}Tk</span>
+                    </TableCell>
+                    <TableCell>
+                      <span>{product.tax}%</span>
+                      {' | '}
+                      <span>{product.price * (product.tax / 100)}TK</span>
+                    </TableCell>
+                    <TableCell>
+                      <span>{product.vat}%</span>|
+                      <span>{product.price * (product.vat / 100)}TK</span>
+                    </TableCell>
                     <TableCell>{product.quantity}</TableCell>
                     <TableCell>{product.grade}</TableCell>
                     <TableCell>{product.billingCycle}</TableCell>
@@ -166,13 +181,17 @@ export default function AdminProductsPage() {
                         <Badge variant="destructive">Pending</Badge>
                       )}
                     </TableCell>
-                    <TableCell className="text-right space-x-2">
+                    <TableCell className="text-right flex justify-end items-center space-x-2">
                       {/* <ProductUpdateModal product={product} /> */}
                       <UpdateProductModalForm product={product} />
+                      <Link href={`/admin/products/${product.id}`}>
+                        <EyeIcon className="w-4 h-4" />
+                      </Link>
                       <Button
                         size="icon"
                         variant="ghost"
                         className="cursor-pointer"
+                        disabled={true}
                         onClick={() => deleteProduct(product.id)}
                       >
                         <Trash2Icon className="w-4 h-4 text-red-500" />

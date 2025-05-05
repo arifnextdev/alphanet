@@ -24,8 +24,9 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { useGetOrdersQuery } from '@/lib/services/ordersApi';
-import { Copy } from 'lucide-react';
+import { Copy, EyeIcon } from 'lucide-react';
 import { OrderModalForm } from './_components/OrderModalForm';
+import Link from 'next/link';
 
 export default function OrderPage() {
   const [query, setQuery] = useState('');
@@ -136,7 +137,7 @@ export default function OrderPage() {
                         ? new Date(order.expiresAt).toLocaleDateString()
                         : '—'}
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right flex justify-end items-center">
                       <Button
                         variant="ghost"
                         className="p-1 cursor-copy"
@@ -146,6 +147,10 @@ export default function OrderPage() {
                       >
                         <Copy size={16} />
                       </Button>
+                      <Link href={`/admin/orders/${order.id}`}>
+                        {' '}
+                        <EyeIcon className="w-5 h-5" />
+                      </Link>
                     </TableCell>
                   </TableRow>
                 ))}

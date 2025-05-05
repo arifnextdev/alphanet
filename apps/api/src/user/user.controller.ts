@@ -1,4 +1,3 @@
-import { AuthGuard } from './../auth/auth.guard';
 import {
   Body,
   Controller,
@@ -7,15 +6,9 @@ import {
   Param,
   Put,
   Query,
-  UseGuards,
-  UsePipes,
 } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { UpdateUserDto } from 'src/auth/dto/user.dto';
 import { UserService } from './user.service';
-import { Roles } from 'src/roles/decorator';
-import { Role } from 'src/roles/enum';
-import { RoleGuard } from 'src/roles/guards';
-import { CreateUserDto, UpdateUserDto } from 'src/auth/dto/user.dto';
 
 @Controller('users')
 export class UserController {
@@ -44,6 +37,7 @@ export class UserController {
   getUserById(@Param('id') id: string) {
     return this.userService.getUserById(id);
   }
+
 
   @Put(':id')
   updateUser(@Param('id') id: string, @Body() data: UpdateUserDto) {

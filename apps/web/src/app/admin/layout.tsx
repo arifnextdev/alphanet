@@ -1,4 +1,4 @@
-import Header from './products/_components/sidebar';
+import Header from './_components/sidebar';
 
 export default function AdminLayout({
   children,

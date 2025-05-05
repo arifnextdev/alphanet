@@ -82,6 +82,18 @@ export class UserService {
         avatar: true,
         roles: true,
         status: true,
+        createdAt: true,
+        updatedAt: true,
+        orders: {
+          select: {
+            id: true,
+            domainName: true,
+            amount: true,
+            paidAt: true,
+            expiresAt: true,
+            status: true,
+          },
+        },
         loginHistories: true,
       },
     });

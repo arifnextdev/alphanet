@@ -38,6 +38,8 @@ export function ProductModalForm() {
   const [quantity, setQuantity] = useState<string>('1');
   const [discount, setDiscount] = useState('0');
   const [config, setConfig] = useState<any>({});
+  const [vat, setVat] = useState('0');
+  const [tax, setTax] = useState('0');
 
   const handleTypeChange = (value: string) => {
     setType(value);
@@ -58,6 +60,8 @@ export function ProductModalForm() {
       billingCycle,
       status,
       config,
+      vat: parseFloat(vat),
+      tax: parseFloat(tax),
     };
 
     createProduct(productData);
@@ -69,6 +73,10 @@ export function ProductModalForm() {
     setBillingCycle('MONTHLY');
     setStatus('ACTIVE');
     setConfig({});
+    setQuantity('1');
+    setDiscount('0');
+    setVat('0');
+    setTax('0');
   };
 
   const renderConfigFields = () => {
@@ -223,6 +231,34 @@ export function ProductModalForm() {
               value={discount}
               min={0}
               onChange={(e) => setDiscount(e.target.value)}
+              className="col-span-3"
+            />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="price" className="text-right">
+              Vat
+            </Label>
+            <Input
+              id="vat"
+              type="number"
+              value={vat}
+              min={0}
+              max={100}
+              onChange={(e) => setVat(e.target.value)}
+              className="col-span-3"
+            />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="price" className="text-right">
+              Tax
+            </Label>
+            <Input
+              id="tax"
+              type="number"
+              value={tax}
+              min={0}
+              max={100}
+              onChange={(e) => setTax(e.target.value)}
               className="col-span-3"
             />
           </div>

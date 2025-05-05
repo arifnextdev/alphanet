@@ -16,6 +16,8 @@ export interface IProduct {
   status: string;
   quantity: number;
   discount: number;
+  vat: number;
+  tax: number;
   grade: string;
   price: number;
   billingCycle: string;
@@ -62,6 +64,11 @@ export const productsApi = createApi({
       }),
       invalidatesTags: ['Products'],
     }),
+    getProductById: builder.query<IProduct, string>({
+      query: (id) => ({
+        url: `products/${id}`,
+      }),
+    }),
     updateProduct: builder.mutation<
       IProduct,
       { id: string; data: Partial<IProduct> }
@@ -86,6 +93,7 @@ export const productsApi = createApi({
 export const {
   useGetProductsQuery,
   useCreateProductMutation,
+  useGetProductByIdQuery,
   useUpdateProductMutation,
   useDeleteProductMutation,
 } = productsApi;
