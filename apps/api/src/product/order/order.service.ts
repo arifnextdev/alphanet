@@ -17,6 +17,7 @@ import axios from 'axios';
 import * as https from 'https';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { GetOrderDto, OrederCreateDto } from '../common/dto/order.dto';
+import { MailService } from 'src/mail/mail.service';
 
 export interface CreateCpanelAccountParams {
   userName: string;
@@ -37,6 +38,7 @@ export class OrderService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly http: HttpService,
+    private readonly mail: MailService,
   ) {}
 
   async findAll({ limit = 10, page = 1, search, status }: GetOrderDto) {
@@ -391,6 +393,20 @@ export class OrderService {
         },
       },
     });
+
+    if (!order) {
+      throw new NotFoundException('Order not created');
+    }
+
+    const html = `
+      <h1>Order Created</h1>
+      <p>Order ID: ${order.id}</p>
+      <p>Product: ${order.status}</p>
+      <p>Amount: ${order.amount}</p>
+      <p>Expiry Date: ${order.expiresAt}</p>
+    `;
+
+    await this.mail.sendBasicEmail(user.email, 'Order Created', html);
 
     return order;
 

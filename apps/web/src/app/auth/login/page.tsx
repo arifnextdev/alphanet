@@ -5,6 +5,10 @@ import { Input } from '@/components/ui/input';
 import { GithubIcon, PiIcon } from 'lucide-react';
 
 export default function LoginPage() {
+  const handleGoogleLogin = () => {
+    window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/google`;
+    // Example: http://localhost:3000/auth/google
+  };
   return (
     <div className="min-h-screen flex items-center justify-center bg-black px-4">
       <div className="w-full max-w-md space-y-6 bg-zinc-900 p-8 rounded-2xl shadow-lg">
@@ -34,8 +38,12 @@ export default function LoginPage() {
         </div>
 
         <div className="flex flex-col gap-4">
-          <Button variant="outline" className="w-full flex items-center gap-2">
-            <PiIcon className="text-xl" /> Google
+          <Button
+            variant="outline"
+            className="w-full flex items-center gap-2"
+            onClick={handleGoogleLogin}
+          >
+            <PiIcon className="text-xl" />
           </Button>
           <Button variant="outline" className="w-full flex items-center gap-2">
             <GithubIcon className="text-xl" /> GitHub

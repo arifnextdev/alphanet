@@ -41,7 +41,6 @@ import { MailModule } from './mail/mail.module';
     AuthController,
     ProductController,
     OrderController,
-
     UserController,
     SettingController,
   ],
@@ -51,7 +50,6 @@ import { MailModule } from './mail/mail.module';
     UserService,
     ProductService,
     OrderService,
-
     SettingService,
     PrismaService,
     OrderReminderService,

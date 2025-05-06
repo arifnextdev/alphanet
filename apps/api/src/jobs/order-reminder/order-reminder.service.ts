@@ -36,13 +36,13 @@ export class OrderReminderService {
 
       
     for (const order of ordersToRemind) {
-      await this.mailService.sendInvoiceReminder(order);
+      // await this.mailService.sendInvoiceReminder(order);
     }
 
     // Orders expiring today
     const expiringToday = await this.orderService.getOrdersExpiringOn(today);
     for (const order of expiringToday) {
-      await this.mailService.sendExpiryNotice(order);
+      // await this.mailService.sendExpiryNotice(order);
     }
 
     this.logger.log('✅ Reminder emails sent');
