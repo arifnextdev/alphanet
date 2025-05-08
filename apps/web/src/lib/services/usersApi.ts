@@ -13,6 +13,7 @@ export interface IUser {
   name: string;
   email: string;
   status: string;
+  provider: string;
   roles: string[];
   avatar?: string | null;
 }

@@ -1,4 +1,3 @@
-//auth service
 import {
   Injectable,
   NotFoundException,
@@ -6,10 +5,11 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import { Request } from 'express';
+import { Request, Response } from 'express';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateUserDto } from './dto/user.dto';
 import { UserLoginDto } from './dto/user.login.dto';
+import { randomBytes } from 'crypto';
 
 @Injectable()
 export class AuthService {
@@ -50,10 +50,26 @@ export class AuthService {
         status: true,
       },
     });
+
     return user;
   }
 
   async signIn(dto: UserLoginDto, req: Request) {
+    // const requestIp =
+    //   (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ||
+    //   req.socket.remoteAddress ||
+    //   req.connection.remoteAddress;
+
+    // const allowedRanges = ['103.250.70.', '103.251.247.', '103.251.245.'];
+
+    // const isAllowedIp = allowedRanges.some((range) =>
+    //   requestIp?.startsWith(range),
+    // );
+
+    // if (!isAllowedIp) {
+    //   throw new UnauthorizedException('You are not allowed to access');
+    // }
+
     const user = await this.prisma.user.findUnique({
       where: {
         email: dto.email,
@@ -64,10 +80,14 @@ export class AuthService {
       throw new NotFoundException('User not found');
     }
 
+    if (user.provider !== 'CREDENTIAL') {
+      throw new UnauthorizedException('You are not allowed to access');
+    }
+
     if (user.status !== 'ACTIVE') {
       await this.prisma.loginHistory.create({
         data: {
-          userId: user?.id,
+          userId: user.id,
           ip: req.ip,
           userAgent: req.headers['user-agent'],
           attempt: 'FAILED',
@@ -81,7 +101,7 @@ export class AuthService {
     if (!isPasswordCorrect) {
       await this.prisma.loginHistory.create({
         data: {
-          userId: user?.id,
+          userId: user.id,
           ip: req.ip,
           userAgent: req.headers['user-agent'],
           attempt: 'FAILED',
@@ -90,59 +110,44 @@ export class AuthService {
       throw new UnauthorizedException('Password is incorrect');
     }
 
-    //Updated login history
     await this.prisma.loginHistory.create({
       data: {
-        userId: user?.id,
+        userId: user.id,
         ip: req.ip,
         userAgent: req.headers['user-agent'],
         attempt: 'SUCCESS',
       },
     });
 
-    return this.generateToken({
-      userId: user.id,
-      email: user.email,
-      roles: user.roles,
-      status: user.status,
-    });
+    return this.generateTokens(user.id, user.email, user.roles, user.status);
   }
 
-  async socialLogin(googleUser: any): Promise<string> {
+  async socialLogin(
+    googleUser: any,
+    provider: string,
+  ): Promise<{
+    accessToken: string;
+    refreshToken: string;
+  }> {
     const { email, name, picture } = googleUser;
 
-    const user = await this.prisma.user.findUnique({
+    let user = await this.prisma.user.findUnique({
       where: { email },
     });
 
     if (!user) {
-      // Register new user
-      const user = await this.prisma.user.create({
+      user = await this.prisma.user.create({
         data: {
           email,
           name,
           avatar: picture,
-          provider: 'GOOGLE', // optional
+          provider: provider === 'google' ? 'GOOGLE' : 'FACEBOOK',
           username: this.generateUniqueUserName(name, email),
         },
       });
-
-      return this.generateToken({
-        userId: user.id,
-        email: user.email,
-        roles: user.roles,
-        status: user.status,
-      });
     }
 
-    // Generate JWT
-
-    return this.generateToken({
-      userId: user.id,
-      email: user.email,
-      roles: user.roles,
-      status: user.status,
-    });
+    return this.generateTokens(user.id, user.email, user.roles, user.status);
   }
 
   async me(user: {
@@ -165,41 +170,68 @@ export class AuthService {
       },
     });
 
-    if (!existUser || existUser?.status !== 'ACTIVE') {
+    if (!existUser || existUser.status !== 'ACTIVE') {
       throw new UnauthorizedException('User is not active');
     }
 
+    return { user: existUser };
+  }
+
+  async refreshTokens(refreshToken: string,) {
+    const user = await this.prisma.user.findFirst({
+      where: {
+        refreshToken,
+      },
+    });
+
+    if (!user || user.refreshToken !== refreshToken) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+
+    const jwt = await this.generateTokens(
+      user.id,
+      user.email,
+      user.roles,
+      user.status,
+    );
+
+    return this.generateTokens(user.id, user.email, user.roles, user.status);
+  }
+
+  async logout(userId: string) {
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        refreshToken: null,
+      },
+    });
+
+    return { message: 'Logged out successfully' };
+  }
+
+  private async generateTokens(
+    userId: string,
+    email: string,
+    roles: string[],
+    status: string,
+  ) {
+    const payload = { userId, email, roles, status };
+
+    const accessToken = this.jwtService.sign(payload, {
+      expiresIn: '15m',
+    });
+
+    const refreshToken = randomBytes(64).toString('hex');
+
     return {
-      user: existUser,
+      accessToken,
+      refreshToken,
     };
   }
 
-  private generateToken(payload: {
-    userId: string;
-    email: string;
-    roles: string[];
-    status: string;
-  }) {
-    const accessToken = this.jwtService.sign(payload);
-    return accessToken;
-  }
-
-  private VerifyToken(payload: string) {
-    try {
-      const token = this.jwtService.verify(payload);
-
-      if (!token) {
-        throw new UnauthorizedException('Invalid token');
-      }
-
-      console.log(token);
-      return token;
-    } catch (error) {
-      throw new UnauthorizedException('Invalid token');
-    }
-  }
-
   private generateUniqueUserName(name: string, email: string) {
-    return `${email.split('@')[0]}_${new Date().getMilliseconds()}_${name.split(' ')[0].slice(0, 2)}`;
+    return `${email.split('@')[0]}_${new Date().getMilliseconds()}_${name
+      .split(' ')[0]
+      .slice(0, 2)}`;
   }
 }

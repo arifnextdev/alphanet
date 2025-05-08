@@ -139,6 +139,7 @@ export default function AdminUsersPage() {
                   <TableHead>Name</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Roles</TableHead>
+                  <TableHead>Provider</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
@@ -155,6 +156,7 @@ export default function AdminUsersPage() {
                         </Badge>
                       ))}
                     </TableCell>
+                    <TableCell>{user.provider}</TableCell>
                     <TableCell>{getStatusBadge(user.status)}</TableCell>
                     <TableCell className="text-right space-x-2 flex items-center justify-end">
                       <UserUpdateModal user={user} />

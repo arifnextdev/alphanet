@@ -2,28 +2,66 @@
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { GithubIcon, PiIcon } from 'lucide-react';
+import { useLoginMutation } from '@/lib/services/auth';
+import { Facebook, GithubIcon, PiIcon } from 'lucide-react';
+import { useState } from 'react';
+import { toast } from 'sonner';
 
 export default function LoginPage() {
+  const [form, setForm] = useState<{
+    email: string;
+    password: string;
+  }>({
+    email: '',
+    password: '',
+  });
   const handleGoogleLogin = () => {
-    window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/google`;
+    window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/api/auth/google`;
     // Example: http://localhost:3000/auth/google
+  };
+
+  const handleFacebookLogin = () => {
+    window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/api/auth/facebook`;
+    // Example: http://localhost:3000/auth/facebook
+  };
+
+  const [login, { isLoading, error, data }] = useLoginMutation();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const res = await login(form);
+    if (res.error) {
+      toast('Invalid email or password', {
+        style: {
+          border: '1px solid #ef4444',
+          background: '#fee2e2',
+          color: '#ef4444',
+        },
+      });
+    }
+    if (res.data) {
+      toast(`Logged in successfully`, );
+    }
   };
   return (
     <div className="min-h-screen flex items-center justify-center bg-black px-4">
       <div className="w-full max-w-md space-y-6 bg-zinc-900 p-8 rounded-2xl shadow-lg">
         <h2 className="text-3xl font-bold text-white text-center">Sign In</h2>
 
-        <form className="space-y-4">
+        <form className="space-y-4" onSubmit={handleSubmit}>
           <Input
             type="email"
             placeholder="Email"
             className="bg-zinc-800 text-white"
+            value={form.email}
+            onChange={(e) => setForm({ ...form, email: e.target.value })}
           />
           <Input
             type="password"
             placeholder="Password"
             className="bg-zinc-800 text-white"
+            value={form.password}
+            onChange={(e) => setForm({ ...form, password: e.target.value })}
           />
 
           <Button type="submit" className="w-full">
@@ -45,8 +83,12 @@ export default function LoginPage() {
           >
             <PiIcon className="text-xl" />
           </Button>
-          <Button variant="outline" className="w-full flex items-center gap-2">
-            <GithubIcon className="text-xl" /> GitHub
+          <Button
+            onClick={handleFacebookLogin}
+            variant="outline"
+            className="w-full flex items-center gap-2"
+          >
+            <Facebook className="text-xl" /> Facebook
           </Button>
         </div>
 

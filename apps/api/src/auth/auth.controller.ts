@@ -8,6 +8,7 @@ import {
   Post,
   Req,
   Res,
+  UnauthorizedException,
   UseGuards,
   UsePipes,
 } from '@nestjs/common';
@@ -20,6 +21,7 @@ import { Role } from '../roles/enum';
 import { RoleGuard } from '../roles/guards';
 import { AuthGuard } from '@nestjs/passport';
 import { Request, Response } from 'express';
+import { JwtAuthGuard } from './auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -28,7 +30,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @Post('login')
   @UsePipes(new ZodValidationPipe(UserLoginSchema))
-  login(@Body() dto: UserLoginDto, @Req() req) {
+  login(@Body() dto: UserLoginDto, @Req() req: Request) {
     return this.authService.signIn(dto, req);
   }
 
@@ -38,8 +40,7 @@ export class AuthController {
     return this.authService.signUp(dto);
   }
 
-  @UseGuards(AuthGuard('jwt'), RoleGuard)
-  @Roles(Role.CUSTOMER, Role.ADMIN)
+  @UseGuards(AuthGuard('jwt'))
   @Get('me')
   me(@Req() req: Request) {
     return this.authService.me(
@@ -52,6 +53,20 @@ export class AuthController {
     );
   }
 
+  @Post('refresh-token')
+  refresh(@Req() req: Request) {
+    const refreshToken = req.cookies['refreshToken'];
+    if (!refreshToken) throw new UnauthorizedException('Invalid refresh token');
+    return this.authService.refreshTokens(refreshToken);
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @Post('logout')
+  logout(@Res() res: Response) {
+    res.clearCookie('refreshToken');
+    return res.json({ message: 'Logged out successfully' });
+  }
+
   @Get('google')
   @UseGuards(AuthGuard('google'))
   async googleAuth() {}
@@ -60,7 +75,20 @@ export class AuthController {
   @UseGuards(AuthGuard('google'))
   async googleRedirect(@Req() req: Request, @Res() res: Response) {
     console.log(req.user);
-    const jwt = await this.authService.socialLogin(req.user);
+    const jwt = await this.authService.socialLogin(req.user, 'GOOGLE');
+    console.log(jwt);
+    res.redirect(`http://localhost:3000/oauth-callback?token=${jwt}`);
+  }
+
+  @Get('facebook')
+  @UseGuards(AuthGuard('facebook'))
+  async facebookAuth() {}
+
+  @Get('facebook/callback')
+  @UseGuards(AuthGuard('facebook'))
+  async facebookRedirect(@Req() req: Request, @Res() res: Response) {
+    console.log(req.user);
+    const jwt = await this.authService.socialLogin(req.user, 'FACEBOOK');
     console.log(jwt);
     res.redirect(`http://localhost:3000/oauth-callback?token=${jwt}`);
   }

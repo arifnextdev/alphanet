@@ -1,0 +1,50 @@
+import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+
+export interface IUser {
+  id: string;
+  name: string;
+  email: string;
+  status: string;
+  provider: string;
+  roles: string[];
+  avatar?: string | null;
+}
+
+const BASE_URL = 'http://localhost:3001/api';
+
+export const authApi = createApi({
+  reducerPath: 'authApi',
+  baseQuery: fetchBaseQuery({ baseUrl: BASE_URL }),
+  tagTypes: ['Auth'],
+  endpoints: (builder) => ({
+    login: builder.mutation<IUser, { email: string; password: string }>({
+      query: ({ email, password }: { email: string; password: string }) => ({
+        url: '/auth/login',
+        method: 'POST',
+        body: { email, password },
+      }),
+      invalidatesTags: ['Auth'],
+    }),
+    register: builder.mutation<
+      IUser,
+      { email: string; password: string; name: string }
+    >({
+      query: ({
+        email,
+        password,
+        name,
+      }: {
+        email: string;
+        password: string;
+        name: string;
+      }) => ({
+        url: '/auth/register',
+        method: 'POST',
+        body: { email, password, name },
+      }),
+      invalidatesTags: ['Auth'],
+    }),
+  }),
+});
+
+export const { useLoginMutation, useRegisterMutation } = authApi;

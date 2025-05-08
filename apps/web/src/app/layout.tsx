@@ -2,8 +2,9 @@ import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { Header } from '@/components/Header';
-import { ThemeProvider } from '@/components/theme-provider';
 import { Providers } from './providers';
+import { ThemeProvider } from '@/components/theme-provider';
+import { Toaster } from '@/components/ui/sonner';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -41,6 +42,7 @@ export default function RootLayout({
             <main className="w-full h-[calc(100vh-100px)]">{children}</main>
           </ThemeProvider>
         </Providers>
+        <Toaster />
       </body>
     </html>
   );
