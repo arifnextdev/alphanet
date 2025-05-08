@@ -10,7 +10,7 @@ export interface IUser {
   avatar?: string | null;
 }
 
-const BASE_URL = 'http://localhost:3001/api';
+const BASE_URL = 'http://localhost:3001';
 
 export const authApi = createApi({
   reducerPath: 'authApi',
@@ -44,7 +44,31 @@ export const authApi = createApi({
       }),
       invalidatesTags: ['Auth'],
     }),
+    logout: builder.mutation<void, void>({
+      query: () => ({
+        url: '/auth/logout',
+        method: 'POST',
+      }),
+      invalidatesTags: ['Auth'],
+    }),
+    // get auth user use authrization header token get query
+    me: builder.query<IUser, { token: string | '' }>({
+      query: ({ token }) => ({
+        url: '/auth/me',
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: token ? `Bearer ${token}` : undefined,
+        },
+      }),
+      providesTags: ['Auth'],
+    }),
   }),
 });
 
-export const { useLoginMutation, useRegisterMutation } = authApi;
+export const {
+  useLoginMutation,
+  useRegisterMutation,
+  useLogoutMutation,
+  useMeQuery,
+} = authApi;

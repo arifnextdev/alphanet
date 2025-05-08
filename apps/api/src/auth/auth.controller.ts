@@ -77,7 +77,9 @@ export class AuthController {
     console.log(req.user);
     const jwt = await this.authService.socialLogin(req.user, 'GOOGLE');
     console.log(jwt);
-    res.redirect(`http://localhost:3000/oauth-callback?token=${jwt}`);
+    res.redirect(
+      `http://localhost:3000/oauth-callback?token=${jwt.accessToken}`,
+    );
   }
 
   @Get('facebook')
@@ -90,6 +92,8 @@ export class AuthController {
     console.log(req.user);
     const jwt = await this.authService.socialLogin(req.user, 'FACEBOOK');
     console.log(jwt);
-    res.redirect(`http://localhost:3000/oauth-callback?token=${jwt}`);
+    res.redirect(
+      `http://localhost:3000/oauth-callback?token=${jwt.accessToken}`,
+    );
   }
 }

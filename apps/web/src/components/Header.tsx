@@ -9,12 +9,17 @@ import {
   NavigationMenuTrigger,
 } from '@/components/ui/navigation-menu';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { useLogoutMutation } from '@/lib/services/auth';
+import { setAuth } from '@/lib/slices/authSlice';
+import { RootState } from '@/lib/store';
 import { cn } from '@/lib/utils';
-import { MenuIcon } from 'lucide-react';
+import { ChevronDown, Loader, LogOutIcon, MenuIcon } from 'lucide-react';
 import Link from 'next/link';
-import { redirect } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import * as React from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { ModeToggle } from './themeToggole';
+import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 
 const components = [
   {
@@ -54,8 +59,23 @@ const components = [
 ];
 
 export function Header() {
+  const authUser = useSelector((state: RootState) => state.auth.user);
+  const dispatch = useDispatch();
+  const router = useRouter();
+
+  const [logout, { isLoading }] = useLogoutMutation();
+
+  const handleLogout = () => {
+    logout()
+      .unwrap()
+      .then(() => {
+        router.push('/');
+        dispatch(setAuth({ token: null, user: null }));
+      });
+  };
+
   return (
-    <header className=" bg-background/10 backdrop-blur border-b  border-primary/20 shadow-sm fixed w-full top-0 z-50">
+    <header className="bg-background/10 backdrop-blur border-b border-primary/20 shadow-sm fixed w-full top-0 z-50">
       <div className="container mx-auto px-4 py-3 flex justify-between items-center">
         <Link href="/" className="text-xl font-bold text-primary">
           Alpha Net
@@ -74,7 +94,6 @@ export function Header() {
                 href="/services/dedicated-server"
               />
               <NavDropdown label="Cloud" href="/services/cloud" />
-
               <NavigationMenuItem>
                 <Link href="/about" passHref legacyBehavior>
                   <NavigationMenuLink className="text-md font-medium text-foreground">
@@ -89,13 +108,46 @@ export function Header() {
                   </NavigationMenuLink>
                 </Link>
               </NavigationMenuItem>
-              <NavigationMenuItem>
-                <Link href="/auth/login" passHref legacyBehavior>
-                  <NavigationMenuLink className="font-medium bg-primary text-white px-4 py-2 rounded">
-                    Login
-                  </NavigationMenuLink>
-                </Link>
-              </NavigationMenuItem>
+              {authUser ? (
+                <>
+                  <NavigationMenuItem>
+                    <Link
+                      href={`/profile/${authUser.id}`}
+                      passHref
+                      legacyBehavior
+                    >
+                      <NavigationMenuLink className="text-md font-medium text-foreground">
+                        <Avatar>
+                          <AvatarImage src={authUser.avatar || ''} />
+                          <AvatarFallback>
+                            {authUser.name.charAt(0)}
+                          </AvatarFallback>
+                        </Avatar>
+                      </NavigationMenuLink>
+                    </Link>
+                  </NavigationMenuItem>
+                  <NavigationMenuItem>
+                    <NavigationMenuLink
+                      onClick={handleLogout}
+                      className="text-md font-medium text-foreground cursor-pointer"
+                    >
+                      {isLoading ? (
+                        <Loader className="animate-spin" />
+                      ) : (
+                        <LogOutIcon className='text-destructive '/>
+                      )}
+                    </NavigationMenuLink>
+                  </NavigationMenuItem>
+                </>
+              ) : (
+                <NavigationMenuItem>
+                  <Link href="/auth/login" passHref legacyBehavior>
+                    <NavigationMenuLink className="bg-primary   text-md font-medium text-white dark:text-foreground cursor-pointer">
+                      Login
+                    </NavigationMenuLink>
+                  </Link>
+                </NavigationMenuItem>
+              )}
             </NavigationMenuList>
           </NavigationMenu>
           <ModeToggle />
@@ -108,39 +160,7 @@ export function Header() {
               <MenuIcon className="w-6 h-6 text-primary" />
             </SheetTrigger>
             <SheetContent side="right" className="w-[80%] p-4 bg-background">
-              <div className="space-y-4">
-                {[
-                  'Hosting',
-                  'Domain',
-                  'Email',
-                  'VPS',
-                  'Dedicated Server',
-                  'Cloud',
-                ].map((section) => (
-                  <MobileDropdown key={section} label={section} />
-                ))}
-                <div className="space-y-2 pt-4 border-t">
-                  <Link
-                    href="/about"
-                    className="block text-foreground hover:text-primary"
-                  >
-                    About
-                  </Link>
-                  <Link
-                    href="/contact"
-                    className="block text-foreground hover:text-primary"
-                  >
-                    Contact
-                  </Link>
-                  <Link
-                    href="/login"
-                    className="block font-medium bg-primary text-white px-4 py-2 rounded w-fit"
-                  >
-                    Login
-                  </Link>
-                </div>
-                <ModeToggle />
-              </div>
+              <MobileMenu authUser={authUser} />
             </SheetContent>
           </Sheet>
         </div>
@@ -150,11 +170,13 @@ export function Header() {
 }
 
 function NavDropdown({ label, href }: { label: string; href: string }) {
+  const router = useRouter();
+
   return (
     <NavigationMenuItem>
       <NavigationMenuTrigger
         className="bg-transparent text-foreground text-md cursor-pointer"
-        onClick={() => redirect(`${href}`)}
+        onClick={() => router.push(href)}
       >
         {label}
       </NavigationMenuTrigger>
@@ -175,22 +197,89 @@ function NavDropdown({ label, href }: { label: string; href: string }) {
   );
 }
 
-function MobileDropdown({ label }: { label: string }) {
+function MobileMenu({ authUser }: { authUser: any }) {
+  const items = [
+    { label: 'Hosting' },
+    { label: 'Domain' },
+    { label: 'Email' },
+    { label: 'VPS' },
+    { label: 'Dedicated Server' },
+    { label: 'Cloud' },
+  ];
+
   return (
-    <div>
-      <div className="font-semibold text-foreground mb-2">{label}</div>
-      <ul className="space-y-2">
-        {components.map((component) => (
-          <li key={component.title}>
+    <div className="space-y-4">
+      {items.map((item) => (
+        <MobileDropdown key={item.label} label={item.label} />
+      ))}
+      <div className="space-y-2 pt-4 border-t">
+        <Link
+          href="/about"
+          className="block text-foreground hover:text-primary"
+        >
+          About
+        </Link>
+        <Link
+          href="/contact"
+          className="block text-foreground hover:text-primary"
+        >
+          Contact
+        </Link>
+
+        {authUser ? (
+          <>
+            <Avatar>
+              <AvatarImage src={authUser.avatar} />
+              <AvatarFallback>{authUser.name.charAt(0)}</AvatarFallback>
+            </Avatar>
             <Link
-              href={component.href}
-              className="text-sm text-muted-foreground block hover:text-primary"
+              href="/auth/logout"
+              className="block text-foreground hover:text-primary"
             >
-              {component.title}
+              Logout
             </Link>
-          </li>
-        ))}
-      </ul>
+          </>
+        ) : (
+          <Link
+            href="/auth/login"
+            className="block text-foreground hover:text-primary"
+          >
+            Login
+          </Link>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function MobileDropdown({ label }: { label: string }) {
+  const [open, setOpen] = React.useState(false);
+
+  return (
+    <div className="border-b pb-2">
+      <div
+        className="font-semibold text-foreground mb-2 flex items-center justify-between cursor-pointer"
+        onClick={() => setOpen(!open)}
+      >
+        {label}
+        <ChevronDown
+          className={`h-4 w-4 transition-transform ${open ? 'rotate-180' : ''}`}
+        />
+      </div>
+      {open && (
+        <ul className="space-y-2">
+          {components.map((component) => (
+            <li key={component.title}>
+              <Link
+                href={component.href}
+                className="text-sm text-muted-foreground block hover:text-primary"
+              >
+                {component.title}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

@@ -3,100 +3,108 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useLoginMutation } from '@/lib/services/auth';
-import { Facebook, GithubIcon, PiIcon } from 'lucide-react';
+import { Facebook, GithubIcon } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/lib/store';
 
 export default function LoginPage() {
-  const [form, setForm] = useState<{
-    email: string;
-    password: string;
-  }>({
-    email: '',
-    password: '',
-  });
-  const handleGoogleLogin = () => {
-    window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/api/auth/google`;
-    // Example: http://localhost:3000/auth/google
+  const router = useRouter();
+  const authUser = useSelector((state: RootState) => state.auth.user);
+
+  const [form, setForm] = useState({ email: '', password: '' });
+  const [login, { isLoading }] = useLoginMutation();
+
+  const handleOAuthLogin = (provider: 'google' | 'facebook') => {
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+    if (!baseUrl) {
+      toast.error('Missing API URL configuration');
+      return;
+    }
+    window.location.href = `${baseUrl}/auth/${provider}`;
   };
 
-  const handleFacebookLogin = () => {
-    window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/api/auth/facebook`;
-    // Example: http://localhost:3000/auth/facebook
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
   };
-
-  const [login, { isLoading, error, data }] = useLoginMutation();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const res = await login(form);
-    if (res.error) {
-      toast('Invalid email or password', {
-        style: {
-          border: '1px solid #ef4444',
-          background: '#fee2e2',
-          color: '#ef4444',
-        },
-      });
+
+    if (!form.email || !form.password) {
+      toast.error('Please fill in all fields');
+      return;
     }
-    if (res.data) {
-      toast(`Logged in successfully`, );
+
+    try {
+       await login(form).unwrap();
+      toast.success('Logged in successfully');
+      router.push('/admin/dashboard');
+    } catch (err) {
+      toast.error('Invalid email or password');
     }
   };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-black px-4">
-      <div className="w-full max-w-md space-y-6 bg-zinc-900 p-8 rounded-2xl shadow-lg">
-        <h2 className="text-3xl font-bold text-white text-center">Sign In</h2>
+    <div className="min-h-screen flex items-center justify-center px-4">
+      <div className="w-full max-w-md space-y-6 p-8 rounded-2xl shadow-lg border border-secondary">
+        <h2 className="text-3xl font-bold  text-center">Sign In</h2>
 
         <form className="space-y-4" onSubmit={handleSubmit}>
           <Input
+            name="email"
             type="email"
             placeholder="Email"
-            className="bg-zinc-800 text-white"
             value={form.email}
-            onChange={(e) => setForm({ ...form, email: e.target.value })}
+            onChange={handleChange}
+            disabled={isLoading}
           />
           <Input
+            name="password"
             type="password"
             placeholder="Password"
-            className="bg-zinc-800 text-white"
+            className=""
             value={form.password}
-            onChange={(e) => setForm({ ...form, password: e.target.value })}
+            onChange={handleChange}
+            disabled={isLoading}
           />
-
-          <Button type="submit" className="w-full">
-            Sign In
+          <Button type="submit" className="w-full" disabled={isLoading}>
+            {isLoading ? 'Signing in...' : 'Sign In'}
           </Button>
         </form>
 
         <div className="flex items-center gap-4">
-          <hr className="flex-1 border-zinc-700" />
-          <span className="text-zinc-500 text-sm">or continue with</span>
-          <hr className="flex-1 border-zinc-700" />
+          <hr className="flex-1 " />
+          <span className=" text-sm">or continue with</span>
+          <hr className="flex-1 " />
         </div>
 
         <div className="flex flex-col gap-4">
           <Button
             variant="outline"
-            className="w-full flex items-center gap-2"
-            onClick={handleGoogleLogin}
+            className="w-full flex items-center justify-center gap-2"
+            onClick={() => handleOAuthLogin('google')}
           >
-            <PiIcon className="text-xl" />
+            <GithubIcon className="text-xl" /> Google
           </Button>
           <Button
-            onClick={handleFacebookLogin}
             variant="outline"
-            className="w-full flex items-center gap-2"
+            className="w-full flex items-center justify-center gap-2"
+            onClick={() => handleOAuthLogin('facebook')}
           >
             <Facebook className="text-xl" /> Facebook
           </Button>
         </div>
 
-        <p className="text-center text-sm text-zinc-500">
-          Dont have an account?
-          <a href="/auth/register" className="text-blue-500 hover:underline">
+        <p className="text-center text-sm ">
+          Dont have an account?{' '}
+          <Link href="/auth/register" className="text-blue-500 hover:underline">
             Register
-          </a>
+          </Link>
         </p>
       </div>
     </div>

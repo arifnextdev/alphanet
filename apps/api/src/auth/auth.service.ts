@@ -174,10 +174,10 @@ export class AuthService {
       throw new UnauthorizedException('User is not active');
     }
 
-    return { user: existUser };
+    return existUser;
   }
 
-  async refreshTokens(refreshToken: string,) {
+  async refreshTokens(refreshToken: string) {
     const user = await this.prisma.user.findFirst({
       where: {
         refreshToken,
@@ -187,13 +187,6 @@ export class AuthService {
     if (!user || user.refreshToken !== refreshToken) {
       throw new UnauthorizedException('Invalid refresh token');
     }
-
-    const jwt = await this.generateTokens(
-      user.id,
-      user.email,
-      user.roles,
-      user.status,
-    );
 
     return this.generateTokens(user.id, user.email, user.roles, user.status);
   }

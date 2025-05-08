@@ -5,6 +5,8 @@ import { Header } from '@/components/Header';
 import { Providers } from './providers';
 import { ThemeProvider } from '@/components/theme-provider';
 import { Toaster } from '@/components/ui/sonner';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/lib/store';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -32,12 +34,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white text-black dark:bg-black dark:text-white transition-colors duration-300 relative`}
       >
         <Providers>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
+          <ThemeProvider attribute="class" defaultTheme="system">
             <Header />
             <main className="w-full h-[calc(100vh-100px)]">{children}</main>
           </ThemeProvider>
