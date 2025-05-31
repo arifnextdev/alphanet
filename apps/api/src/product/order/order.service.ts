@@ -18,6 +18,7 @@ import * as https from 'https';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { GetOrderDto, OrederCreateDto } from '../common/dto/order.dto';
 import { MailService } from 'src/mail/mail.service';
+import { BikashService } from 'src/bikash/bikash.service';
 
 export interface CreateCpanelAccountParams {
   userName: string;
@@ -39,6 +40,7 @@ export class OrderService {
     private readonly prisma: PrismaService,
     private readonly http: HttpService,
     private readonly mail: MailService,
+    private readonly bikash: BikashService,
   ) {}
 
   async findAll({ limit = 10, page = 1, search, status }: GetOrderDto) {
@@ -345,6 +347,68 @@ export class OrderService {
       throw new NotFoundException('User or Product not found');
     }
 
+    const price = product.price;
+    const discountRate = product.discount || 0;
+    const taxRate = product.tax || 0;
+    const vatRate = product.vat || 0;
+
+    // 1. Calculate discounted amount
+    const discountAmount = (price * discountRate) / 100;
+    const discountedPrice = price - discountAmount;
+
+    // 2. Calculate tax and VAT based on discounted price
+    const taxAmount = (discountedPrice * taxRate) / 100;
+    const vatAmount = (discountedPrice * vatRate) / 100;
+
+    // 3. Final total (subtotal)
+    const total = discountedPrice + taxAmount + vatAmount;
+
+    const order = await this.prisma.order.create({
+      data: {
+        userId: user.id,
+        productId: product.id,
+        amount: product.price,
+        expiresAt: this.calculateExpiryDate(product.billingCycle),
+        status: 'PENDING',
+        payments: {
+          create: {
+            userId: user.id,
+            amount: product.price,
+            vat: vatAmount,
+            tax: taxAmount,
+            discount: discountedPrice,
+            subtotal: total,
+          },
+        },
+      },
+      select: {
+        id: true,
+        payments: { select: { id: true, subtotal: true } },
+      },
+    });
+
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+
+    const bikash = this.bikash.createPayment(
+      order.payments[0].subtotal || total,
+      order.payments[0].id,
+    );
+
+    return bikash;
+  }
+
+  async createOrders(data: OrederCreateDto) {
+    const [user, product] = await Promise.all([
+      this.#ValidateUser(data.userId),
+      this.#ValidateProduct(data.productId),
+    ]);
+
+    if (!user || !product) {
+      throw new NotFoundException('User or Product not found');
+    }
+
     const expiresAt = this.calculateExpiryDate(product.billingCycle);
     const password = this.generateRandomPassword();
     let plan = 'neyamot_default';
@@ -377,7 +441,6 @@ export class OrderService {
       data: {
         userId: user.id,
         productId: product.id,
-        domainName: data.domainName,
         amount: price,
         expiresAt,
         status: 'PENDING',
@@ -392,11 +455,34 @@ export class OrderService {
           },
         },
       },
+      select: {
+        id: true,
+        status: true,
+        amount: true,
+        expiresAt: true,
+        payments: {
+          select: {
+            id: true,
+            amount: true,
+            vat: true,
+            tax: true,
+            discount: true,
+            subtotal: true,
+          },
+        },
+      },
     });
 
     if (!order) {
       throw new NotFoundException('Order not created');
     }
+
+    const bikash = this.bikash.createPayment(
+      order.payments[0].subtotal || order.amount,
+      order.payments[0].id,
+    );
+
+    //Payment
 
     const html = `
       <h1>Order Created</h1>
@@ -406,9 +492,12 @@ export class OrderService {
       <p>Expiry Date: ${order.expiresAt}</p>
     `;
 
-    await this.mail.sendBasicEmail(user.email, 'Order Created', html);
+    // await this.mail.sendBasicEmail(user.email, 'Order Created', html);
 
-    return order;
+    return {
+      order,
+      bikash,
+    };
 
     // try {
     //   const cpanelAccount = await this.createCpanelAccount({

@@ -1,5 +1,12 @@
 'use client';
 
+import * as React from 'react';
+import Link from 'next/link';
+import { useTheme } from 'next-themes';
+import { Moon, Sun, Menu } from 'lucide-react';
+
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -9,56 +16,67 @@ import {
   NavigationMenuTrigger,
 } from '@/components/ui/navigation-menu';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { useLogoutMutation } from '@/lib/services/auth';
-import { setAuth } from '@/lib/slices/authSlice';
-import { RootState } from '@/lib/store';
-import { cn } from '@/lib/utils';
-import { ChevronDown, Loader, LogOutIcon, MenuIcon } from 'lucide-react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import * as React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { ModeToggle } from './themeToggole';
+import { RootState } from '@/lib/store';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
+import { setAuth } from '@/lib/slices/authSlice';
+import { useLogoutMutation } from '@/lib/services/auth';
+import { useRouter } from 'next/navigation';
 
-const components = [
+const menuData = [
   {
-    title: 'Alert Dialog',
-    href: '/docs/primitives/alert-dialog',
-    description:
-      'A modal dialog that interrupts the user with important content and expects a response.',
+    title: 'Hosting',
+    href: '/services/hosting',
+    items: [
+      { title: 'Shared Hosting', href: '/shared-hosting' },
+      { title: 'WordPress Hosting', href: '/wordpress-hosting' },
+    ],
   },
   {
-    title: 'Hover Card',
-    href: '/docs/primitives/hover-card',
-    description:
-      'For sighted users to preview content available behind a link.',
+    title: 'Domain',
+    href: '/services/domain',
+    items: [
+      { title: 'Register Domain', href: '/register-domain' },
+      { title: 'Transfer Domain', href: '/transfer-domain' },
+    ],
   },
   {
-    title: 'Progress',
-    href: '/docs/primitives/progress',
-    description:
-      'Displays an indicator showing the completion progress of a task.',
+    title: 'Email',
+    href: '/services/email',
+    items: [
+      { title: 'Business Email', href: '/business-email' },
+      { title: 'Zimbra Mail', href: '/zimbra-mail' },
+    ],
   },
   {
-    title: 'Scroll-area',
-    href: '/docs/primitives/scroll-area',
-    description: 'Visually or semantically separates content.',
+    title: 'VPS',
+    href: '/services/vps',
+    items: [
+      { title: 'Linux VPS', href: '/linux-vps' },
+      { title: 'Windows VPS', href: '/windows-vps' },
+    ],
   },
   {
-    title: 'Tabs',
-    href: '/docs/primitives/tabs',
-    description:
-      'A set of layered sections of content that are displayed one at a time.',
+    title: 'Dedicated Server',
+    href: '/services/dedicated-server',
+    items: [
+      { title: 'USA Server', href: '/usa-server' },
+      { title: 'BD Server', href: '/bd-server' },
+    ],
   },
   {
-    title: 'Tooltip',
-    href: '/docs/primitives/tooltip',
-    description: 'A popup that displays information when hovered or focused.',
+    title: 'Cloud',
+    href: '/services/cloud',
+    items: [
+      { title: 'Cloud Hosting', href: '/cloud-hosting' },
+      { title: 'Cloud VPS', href: '/cloud-vps' },
+    ],
   },
 ];
 
-export function Header() {
+const Header = () => {
+  const { setTheme, theme } = useTheme();
+
   const authUser = useSelector((state: RootState) => state.auth.user);
   const dispatch = useDispatch();
   const router = useRouter();
@@ -73,239 +91,146 @@ export function Header() {
         dispatch(setAuth({ token: null, user: null }));
       });
   };
-
   return (
-    <header className="bg-background/10 backdrop-blur border-b border-primary/20 shadow-sm fixed w-full top-0 z-50">
-      <div className="container mx-auto px-4 py-3 flex justify-between items-center">
+    <header className="border-b bg-background sticky top-0 z-50 ">
+      <div className="mx-auto container flex h-16 items-center justify-between">
+        {/* Logo */}
         <Link href="/" className="text-xl font-bold text-primary">
           Alpha Net
         </Link>
 
         {/* Desktop Navigation */}
-        <div className="hidden md:flex items-center space-x-4">
+        <div className="hidden md:flex gap-6 items-center">
           <NavigationMenu>
-            <NavigationMenuList className="flex gap-2">
-              <NavDropdown label="Hosting" href="/services/hosting" />
-              <NavDropdown label="Domain" href="/services/domain" />
-              <NavDropdown label="Email" href="/services/email" />
-              <NavDropdown label="VPS" href="/services/vps" />
-              <NavDropdown
-                label="Dedicated Server"
-                href="/services/dedicated-server"
-              />
-              <NavDropdown label="Cloud" href="/services/cloud" />
-              <NavigationMenuItem>
-                <Link href="/about" passHref legacyBehavior>
-                  <NavigationMenuLink className="text-md font-medium text-foreground">
-                    About
-                  </NavigationMenuLink>
-                </Link>
-              </NavigationMenuItem>
-              <NavigationMenuItem>
-                <Link href="/contact" passHref legacyBehavior>
-                  <NavigationMenuLink className="text-md font-medium text-foreground">
-                    Contact
-                  </NavigationMenuLink>
-                </Link>
-              </NavigationMenuItem>
-              {authUser ? (
-                <>
-                  <NavigationMenuItem>
-                    <Link
-                      href={`/profile/${authUser.id}`}
-                      passHref
-                      legacyBehavior
-                    >
-                      <NavigationMenuLink className="text-md font-medium text-foreground">
-                        <Avatar>
-                          <AvatarImage src={authUser.avatar || ''} />
-                          <AvatarFallback>
-                            {authUser.name.charAt(0)}
-                          </AvatarFallback>
-                        </Avatar>
-                      </NavigationMenuLink>
+            <NavigationMenuList>
+              {menuData.map((menu) => (
+                <NavigationMenuItem key={menu.title}>
+                  <NavigationMenuTrigger>
+                    <Link className="text-md" href={menu.href}>
+                      {menu.title}{' '}
                     </Link>
-                  </NavigationMenuItem>
-                  <NavigationMenuItem>
-                    <NavigationMenuLink
-                      onClick={handleLogout}
-                      className="text-md font-medium text-foreground cursor-pointer"
-                    >
-                      {isLoading ? (
-                        <Loader className="animate-spin" />
-                      ) : (
-                        <LogOutIcon className='text-destructive '/>
-                      )}
-                    </NavigationMenuLink>
-                  </NavigationMenuItem>
-                </>
-              ) : (
-                <NavigationMenuItem>
-                  <Link href="/auth/login" passHref legacyBehavior>
-                    <NavigationMenuLink className="bg-primary   text-md font-medium text-white dark:text-foreground cursor-pointer">
-                      Login
-                    </NavigationMenuLink>
-                  </Link>
+                  </NavigationMenuTrigger>
+                  <NavigationMenuContent>
+                    <ul className="grid w-[300px] gap-2 p-4">
+                      {menu.items.map((item) => (
+                        <li key={item.title}>
+                          <NavigationMenuLink asChild>
+                            <Link
+                              href={item.href}
+                              className="block p-2 text-sm hover:bg-muted rounded"
+                            >
+                              {item.title}
+                            </Link>
+                          </NavigationMenuLink>
+                        </li>
+                      ))}
+                    </ul>
+                  </NavigationMenuContent>
                 </NavigationMenuItem>
-              )}
+              ))}
+              <NavigationMenuItem>
+                <NavigationMenuLink asChild>
+                  <Link
+                    href="/about"
+                    className="px-3 py-2 text-sm hover:text-primary"
+                  >
+                    About
+                  </Link>
+                </NavigationMenuLink>
+              </NavigationMenuItem>
+              <NavigationMenuItem>
+                <NavigationMenuLink asChild>
+                  <Link
+                    href="/contact"
+                    className="px-3 py-2 text-sm hover:text-primary"
+                  >
+                    Contact
+                  </Link>
+                </NavigationMenuLink>
+              </NavigationMenuItem>
             </NavigationMenuList>
           </NavigationMenu>
-          <ModeToggle />
+
+          {authUser ? (
+            <>
+              <Avatar>
+                <AvatarImage src={authUser.avatar || ''} />
+                <AvatarFallback>{authUser.name.charAt(0)}</AvatarFallback>
+              </Avatar>
+              <Link
+                href="/auth/logout"
+                className="block text-foreground hover:text-primary"
+              >
+                Logout
+              </Link>
+            </>
+          ) : (
+            <Link
+              href="/auth/login"
+              className="block text-foreground hover:text-primary"
+            >
+              Login
+            </Link>
+          )}
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+          >
+            {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+          </Button>
         </div>
 
         {/* Mobile Menu */}
-        <div className="md:hidden">
+        <div className="md:hidden flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+          >
+            {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+          </Button>
           <Sheet>
-            <SheetTrigger aria-label="Open mobile menu">
-              <MenuIcon className="w-6 h-6 text-primary" />
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <Menu />
+              </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-[80%] p-4 bg-background">
-              <MobileMenu authUser={authUser} />
+            <SheetContent side="left" className="w-[260px]">
+              <div className="mt-4 flex flex-col gap-4">
+                {menuData.map((menu) => (
+                  <div key={menu.title}>
+                    <p className="font-semibold text-sm">{menu.title}</p>
+                    <ul className="pl-2 mt-1 space-y-1">
+                      {menu.items.map((item) => (
+                        <li key={item.title}>
+                          <Link
+                            href={item.href}
+                            className="text-sm text-muted-foreground hover:text-foreground"
+                          >
+                            {item.title}
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+                <Link href="/about" className="text-sm mt-2">
+                  About
+                </Link>
+                <Link href="/contact" className="text-sm">
+                  Contact
+                </Link>
+                <Button className="mt-4 w-full" asChild>
+                  <Link href="/login">Login</Link>
+                </Button>
+              </div>
             </SheetContent>
           </Sheet>
         </div>
       </div>
     </header>
   );
-}
+};
 
-function NavDropdown({ label, href }: { label: string; href: string }) {
-  const router = useRouter();
-
-  return (
-    <NavigationMenuItem>
-      <NavigationMenuTrigger
-        className="bg-transparent text-foreground text-md cursor-pointer"
-        onClick={() => router.push(href)}
-      >
-        {label}
-      </NavigationMenuTrigger>
-      <NavigationMenuContent>
-        <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
-          {components.map((component) => (
-            <ListItem
-              key={component.title}
-              title={component.title}
-              href={component.href}
-            >
-              {component.description}
-            </ListItem>
-          ))}
-        </ul>
-      </NavigationMenuContent>
-    </NavigationMenuItem>
-  );
-}
-
-function MobileMenu({ authUser }: { authUser: any }) {
-  const items = [
-    { label: 'Hosting' },
-    { label: 'Domain' },
-    { label: 'Email' },
-    { label: 'VPS' },
-    { label: 'Dedicated Server' },
-    { label: 'Cloud' },
-  ];
-
-  return (
-    <div className="space-y-4">
-      {items.map((item) => (
-        <MobileDropdown key={item.label} label={item.label} />
-      ))}
-      <div className="space-y-2 pt-4 border-t">
-        <Link
-          href="/about"
-          className="block text-foreground hover:text-primary"
-        >
-          About
-        </Link>
-        <Link
-          href="/contact"
-          className="block text-foreground hover:text-primary"
-        >
-          Contact
-        </Link>
-
-        {authUser ? (
-          <>
-            <Avatar>
-              <AvatarImage src={authUser.avatar} />
-              <AvatarFallback>{authUser.name.charAt(0)}</AvatarFallback>
-            </Avatar>
-            <Link
-              href="/auth/logout"
-              className="block text-foreground hover:text-primary"
-            >
-              Logout
-            </Link>
-          </>
-        ) : (
-          <Link
-            href="/auth/login"
-            className="block text-foreground hover:text-primary"
-          >
-            Login
-          </Link>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function MobileDropdown({ label }: { label: string }) {
-  const [open, setOpen] = React.useState(false);
-
-  return (
-    <div className="border-b pb-2">
-      <div
-        className="font-semibold text-foreground mb-2 flex items-center justify-between cursor-pointer"
-        onClick={() => setOpen(!open)}
-      >
-        {label}
-        <ChevronDown
-          className={`h-4 w-4 transition-transform ${open ? 'rotate-180' : ''}`}
-        />
-      </div>
-      {open && (
-        <ul className="space-y-2">
-          {components.map((component) => (
-            <li key={component.title}>
-              <Link
-                href={component.href}
-                className="text-sm text-muted-foreground block hover:text-primary"
-              >
-                {component.title}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  );
-}
-
-const ListItem = React.forwardRef<
-  React.ElementRef<'a'>,
-  React.ComponentPropsWithoutRef<'a'>
->(({ className, title, children, ...props }, ref) => {
-  return (
-    <li>
-      <NavigationMenuLink asChild>
-        <a
-          ref={ref}
-          className={cn(
-            'block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground',
-            className,
-          )}
-          {...props}
-        >
-          <div className="text-sm font-medium leading-none">{title}</div>
-          <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-            {children}
-          </p>
-        </a>
-      </NavigationMenuLink>
-    </li>
-  );
-});
-ListItem.displayName = 'ListItem';
+export default Header;

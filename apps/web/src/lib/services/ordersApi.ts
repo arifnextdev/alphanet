@@ -92,9 +92,9 @@ export interface CreateOrderPayload {
   domainName?: string;
   userId: string;
   productId: string;
-  username: string;
-  email: string;
-  password: string;
+  username?: string;
+  email?: string;
+  password?: string;
   metadata?: string;
 }
 
@@ -120,6 +120,10 @@ interface IGetUsersResponse {
   orders: IOrder[];
   pagination: IPagination;
 }
+interface OrderResponse {
+  checkOutUrl: string;
+  bkashURL: string;
+}
 
 export const ordersApi = createApi({
   reducerPath: 'ordersApi',
@@ -137,7 +141,7 @@ export const ordersApi = createApi({
       }),
       providesTags: ['Orders'],
     }),
-    createOrder: builder.mutation<Partial<IOrder>, CreateOrderPayload>({
+    createOrder: builder.mutation<Partial<OrderResponse>, CreateOrderPayload>({
       query: (data) => ({
         url: 'Orders',
         method: 'POST',

@@ -23,6 +23,7 @@ import { MailService } from './mail/mail.service';
 import { ScheduleModule } from '@nestjs/schedule';
 import { JobsModule } from './jobs/jobs.module';
 import { MailModule } from './mail/mail.module';
+import { BikashModule } from './bikash/bikash.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { MailModule } from './mail/mail.module';
     CupponModule,
     JobsModule,
     MailModule,
+    BikashModule,
   ],
   controllers: [
     AppController,

@@ -5,6 +5,7 @@ import { OrderService } from './order.service';
 import { OrderController } from './order.controller';
 import { HttpModule, HttpService } from '@nestjs/axios';
 import { MailModule } from 'src/mail/mail.module';
+import { BikashModule } from 'src/bikash/bikash.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { MailModule } from 'src/mail/mail.module';
       maxRedirects: 5,
     }),
     MailModule,
+    BikashModule,
   ],
   controllers: [OrderController],
   providers: [OrderService],

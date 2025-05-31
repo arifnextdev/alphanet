@@ -1,12 +1,12 @@
+import Footer from '@/components/Footer';
+
+import { ThemeProvider } from '@/components/theme-provider';
+import { Toaster } from '@/components/ui/sonner';
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
-import { Header } from '@/components/Header';
 import { Providers } from './providers';
-import { ThemeProvider } from '@/components/theme-provider';
-import { Toaster } from '@/components/ui/sonner';
-import { useSelector } from 'react-redux';
-import { RootState } from '@/lib/store';
+import Header from '@/components/Header';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -31,12 +31,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white text-black dark:bg-black dark:text-white transition-colors duration-300 relative`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white text-black dark:bg-black dark:text-white transition-colors duration-300 `}
       >
         <Providers>
           <ThemeProvider attribute="class" defaultTheme="system">
             <Header />
-            <main className="w-full h-[calc(100vh-100px)]">{children}</main>
+            <main className="w-full ">{children}</main>
+            <Footer />
           </ThemeProvider>
         </Providers>
         <Toaster />

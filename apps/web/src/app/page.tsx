@@ -1,7 +1,6 @@
 import CTA from '@/components/sections/CTA';
-import Hero from '@/components/sections/Hero';
+import DynamicHero from '@/components/sections/DynamicHero';
 import OurServices from '@/components/sections/OurServices';
-import PricingSection from '@/components/sections/Package';
 import Team from '@/components/sections/Team';
 import Testimonials from '@/components/sections/Testimonials';
 import WhyChooseUs from '@/components/sections/WhyChooseUs';
@@ -9,9 +8,9 @@ import WhyChooseUs from '@/components/sections/WhyChooseUs';
 export default function AIToolLandingPage() {
   return (
     <main className=" ">
-      <Hero />
+      <DynamicHero />
       <OurServices />
-      <PricingSection />
+      {/* <PricingSection /> */}
       <WhyChooseUs />
       <Testimonials />
       <Team />
