@@ -1,9 +1,16 @@
 // bkash.service.ts
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import axios from 'axios';
+import { Response } from 'express';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { TasksService } from 'src/tasks/tasks.service';
 
 @Injectable()
 export class BikashService {
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly taskService: TasksService,
+  ) {}
   private readonly baseURL = process.env.BKASH_BASE_URL;
   private readonly appKey = process.env.BKASH_APP_KEY;
   private readonly appSecret = process.env.BKASH_APP_SECRET;
@@ -38,7 +45,7 @@ export class BikashService {
     return this.token;
   }
 
-  async createPayment(amount: number, paymentId: string) {
+  async createPayment(amount: number, payID: string) {
     const token = await this.getToken();
 
     try {
@@ -50,8 +57,8 @@ export class BikashService {
           currency: 'BDT',
           payerReference: '1234',
           intent: 'sale',
-          merchantInvoiceNumber: paymentId,
-          callbackURL: 'http://localhost:3001/bikash/execute',
+          merchantInvoiceNumber: payID,
+          callbackURL: `http://localhost:3001/bikash/execute/?payID=${payID}`,
         },
         {
           headers: {
@@ -63,8 +70,6 @@ export class BikashService {
         },
       );
 
-      console.log('res', res.data);
-
       return res.data;
     } catch (error) {
       console.log(error);
@@ -74,22 +79,75 @@ export class BikashService {
     }
   }
 
-  async executePayment(paymentID: string) {
-    const token = await this.getToken();
+  async executePayment(
+    paymentID: string,
+    status: string,
+    payID: string,
+    res: Response,
+  ) {
+    if (status === 'cancel' || status === 'failure') {
+      const existingPayment = await this.prisma.payment.findUnique({
+        where: { id: payID },
+      });
 
-    console.log('Payment Successfull');
+      if (!existingPayment) {
+        throw new NotFoundException('Payment record not found');
+      }
 
-    // const res = await axios.post(
-    //   `${this.baseURL}/checkout/payment/execute/${paymentID}`,
-    //   {},
-    //   {
-    //     headers: {
-    //       authorization: token,
-    //       'x-app-key': this.appKey,
-    //     },
-    //   },
-    // );
+      await this.prisma.payment.update({
+        where: { id: payID },
+        data: { status: 'FAILED' },
+      });
+      console.log(
+        `Payment ${payID} cancelled or failed with status: ${status}`,
+      );
+      this.taskService.queueEmail({
+        to: 'arif@gmail.com',
+        subject: 'Payment Failed',
+        text: `Your payment with ID ${payID} has been cancelled or failed with status: ${status}.`,
+      });
+      res.redirect(
+        `http://localhost:3000/error?message=${status}&payID=${payID}`,
+      );
 
-    return;
+      this.taskService.queueEmail({
+        to: 'arif@gmail.com',
+        subject: 'Payment Failed',
+        text: `Your payment with ID ${payID} has been cancelled or failed with status: ${status}.`,
+      });
+      return;
+    }
+
+    if (status === 'success') {
+      try {
+        const { data } = await axios.post(`${this.executeUrl}`, { paymentID });
+
+        if (data && data.statusCode === '0000') {
+          await this.prisma.payment.update({
+            where: { id: payID },
+            data: {
+              status: 'SUCCESS',
+              transId: data.trxID,
+              paidAt: data.updateTime,
+              metadata: {
+                paymentId: data.paymentID,
+                createTime: data.createTime,
+                transactionStatus: data.transactionStatus,
+                merchantInvoiceNumber: data.merchantInvoiceNumber,
+                intent: data.intent,
+              },
+            },
+          });
+          res.redirect(
+            `http://localhost:3000/success?message=${data.message}&payID=${payID}`,
+          );
+        }
+      } catch (error) {
+        console.log(error);
+        res.redirect(
+          `http://localhost:3000/error?message=${error.message}&payID=${payID}`,
+        );
+      }
+    }
   }
 }

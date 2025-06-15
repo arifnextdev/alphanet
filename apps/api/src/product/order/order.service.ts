@@ -240,6 +240,9 @@ export class OrderService {
       },
     });
 
+    //Reverse the order of transactions
+    transactions.reverse();
+
     const summary = transactions.reduce(
       (acc, trx) => {
         acc.totalAmount += trx.amount || 0;

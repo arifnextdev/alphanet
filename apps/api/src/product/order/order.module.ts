@@ -16,6 +16,7 @@ import { BikashModule } from 'src/bikash/bikash.module';
     }),
     MailModule,
     BikashModule,
+    
   ],
   controllers: [OrderController],
   providers: [OrderService],

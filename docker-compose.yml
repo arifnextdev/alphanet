@@ -34,7 +34,16 @@ services:
       - '5050:80'
       - '5051:443'
 
-  # ------------------------------------------
+  redis-stack:
+    image: redis/redis-stack:latest
+    ports:
+    - '6379:6379'
+    - '8002:8001'
+    volumes:
+    - redis-stack:/data
+    environment:
+    - REDIS_ARGS=--save 900 1
 
 volumes:
   postgres:
+  redis-stack:

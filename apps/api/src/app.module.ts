@@ -24,10 +24,23 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { JobsModule } from './jobs/jobs.module';
 import { MailModule } from './mail/mail.module';
 import { BikashModule } from './bikash/bikash.module';
+import { TasksService } from './tasks/tasks.service';
+import { TasksModule } from './tasks/tasks.module';
+import { BullModule } from '@nestjs/bullmq';
 
 @Module({
   imports: [
+    BullModule.forRoot({
+      connection: {
+        host: 'localhost',
+        port: 6379,
+      },
+    }),
+    BullModule.registerQueue({
+      name: 'provision',
+    }),
     ScheduleModule.forRoot(),
+    TasksModule,
     PrismaModule,
     AuthModule,
     ProductModule,
@@ -56,6 +69,7 @@ import { BikashModule } from './bikash/bikash.module';
     PrismaService,
     OrderReminderService,
     MailService,
+    TasksService,
   ],
 })
 export class AppModule {}

@@ -97,6 +97,7 @@ export default function OrderPage() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead>Id</TableHead>
                   <TableHead>Domain</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Amount</TableHead>
@@ -109,6 +110,7 @@ export default function OrderPage() {
               <TableBody>
                 {orders.map((order: any) => (
                   <TableRow key={order.id} className="group">
+                    <TableCell className="font-medium">{order.id}</TableCell>
                     <TableCell>{order.domainName || '—'}</TableCell>
                     <TableCell>
                       {order.status === 'ACTIVE' ? (
