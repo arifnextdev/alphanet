@@ -101,20 +101,20 @@ export class BikashService {
       console.log(
         `Payment ${payID} cancelled or failed with status: ${status}`,
       );
-      this.taskService.queueEmail({
-        to: 'arif@gmail.com',
-        subject: 'Payment Failed',
-        text: `Your payment with ID ${payID} has been cancelled or failed with status: ${status}.`,
-      });
+      // this.taskService.queueEmail({
+      //   to: 'arif@gmail.com',
+      //   subject: 'Payment Failed',
+      //   text: `Your payment with ID ${payID} has been cancelled or failed with status: ${status}.`,
+      // });
       res.redirect(
         `http://localhost:3000/error?message=${status}&payID=${payID}`,
       );
 
-      this.taskService.queueEmail({
-        to: 'arif@gmail.com',
-        subject: 'Payment Failed',
-        text: `Your payment with ID ${payID} has been cancelled or failed with status: ${status}.`,
-      });
+      // this.taskService.queueEmail({
+      //   to: 'arif@gmail.com',
+      //   subject: 'Payment Failed',
+      //   text: `Your payment with ID ${payID} has been cancelled or failed with status: ${status}.`,
+      // });
       return;
     }
 

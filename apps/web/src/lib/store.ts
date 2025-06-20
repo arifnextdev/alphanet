@@ -8,6 +8,7 @@ import { productsApi } from './services/productsApi';
 import { ordersApi } from './services/ordersApi';
 import { cupponsApi } from './services/cuppons';
 import { authApi } from './services/auth';
+import { paymentApi } from './services/payment'; // Assuming paymentsApi is defined similarly
 import authReducer from './slices/authSlice'; // default export!
 
 const rootReducer = combineReducers({
@@ -15,6 +16,7 @@ const rootReducer = combineReducers({
   [productsApi.reducerPath]: productsApi.reducer,
   [ordersApi.reducerPath]: ordersApi.reducer,
   [cupponsApi.reducerPath]: cupponsApi.reducer,
+  [paymentApi.reducerPath]: paymentApi.reducer, // Assuming paymentsApi is defined similarly
   [authApi.reducerPath]: authApi.reducer,
   auth: authReducer,
 });
@@ -38,6 +40,7 @@ export const store = configureStore({
       ordersApi.middleware,
       cupponsApi.middleware,
       authApi.middleware,
+      paymentApi.middleware, // Assuming paymentsApi is defined similarly
     ),
 });
 

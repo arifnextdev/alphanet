@@ -13,7 +13,6 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { useGetCupponsQuery } from '@/lib/services/cuppons';
-import { Trash2Icon } from 'lucide-react';
 import { useState } from 'react';
 import CreateCouponModal from '../_components/cupponsModal';
 import UpdateCupponModal from '../_components/UpdateCupponModal';
@@ -31,7 +30,7 @@ export default function CouponsPage() {
   const [page, setPage] = useState(1);
   const pageSize = 5;
 
-  const { data, isLoading } = useGetCupponsQuery(
+  const { data } = useGetCupponsQuery(
     { page, limit: Number(pageSize), search: query },
     { refetchOnMountOrArgChange: true },
   );
@@ -99,11 +98,11 @@ export default function CouponsPage() {
                       </Badge>
                     </TableCell>
                     <TableCell
-                      className={`${c.expiesAt < today ? 'text-destructive' : 'text-green-500 font-semibold'}`}
+                      className={`${c.expiresAt < today ? 'text-destructive' : 'text-green-500 font-semibold'}`}
                     >
-                      {formatDate(c.expiesAt)}
+                      {formatDate(c.expiresAt)}
                     </TableCell>
-                    <TableCell>{formatDate(c.expiesAt)}</TableCell>
+                    <TableCell>{formatDate(c.expiresAt)}</TableCell>
                     <TableCell>
                       <UpdateCupponModal cuppon={c} />
                     </TableCell>

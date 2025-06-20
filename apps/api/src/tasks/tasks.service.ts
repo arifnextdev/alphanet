@@ -14,9 +14,9 @@ export class TasksService {
     await this.provisionQueue.add('setup-vps', user);
   }
 
-  async queueEmail(user: any) {
-    console.log('Queueing email provisioning for user:', user);
-    const job = await this.provisionQueue.add('provision-email', user, {
+  async queueEmail(id: string) {
+    console.log('Queueing email provisioning for user:', id);
+    const job = await this.provisionQueue.add('provision-email', id, {
       removeOnComplete: true,
       attempts: 3,
     });

@@ -1,7 +1,14 @@
 'use client';
 
-import { use, useEffect, useState } from 'react';
+import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   Table,
   TableBody,
@@ -10,19 +17,13 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { format } from 'date-fns';
 import {
   FilteredTransactionResponse,
   useGetFilterTransectionQuery,
 } from '@/lib/services/ordersApi';
+import { format } from 'date-fns';
+import Link from 'next/link';
+import { useEffect, useState } from 'react';
 
 const dateRanges = [
   'today',
@@ -135,6 +136,7 @@ export default function TransactionDashboard() {
                 <TableHead>Billing Cycle</TableHead>
                 <TableHead>Order Expiers At</TableHead>
                 <TableHead>Last Paid At</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -177,6 +179,13 @@ export default function TransactionDashboard() {
                       {trx.order?.paidAt
                         ? format(new Date(trx.order.paidAt), 'PPP')
                         : '—'}
+                    </TableCell>
+                    <TableCell>
+                      <Link href={`/admin/orders/invoice/${trx.id}`}>
+                        <Badge className="cursor-pointer text-white">
+                          View Invoice
+                        </Badge>
+                      </Link>
                     </TableCell>
                   </TableRow>
                 ))

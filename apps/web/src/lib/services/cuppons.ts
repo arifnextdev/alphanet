@@ -7,12 +7,12 @@ interface IGetUsersParams {
   search?: string;
 }
 
-interface ICUPPON {
+export interface ICUPPON {
   id: string;
   code: number;
   status: string;
   discount: number;
-  expiesAt: Date;
+  expiresAt: Date;
 }
 
 interface IPagination {

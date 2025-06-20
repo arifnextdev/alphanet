@@ -1,11 +1,11 @@
+import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
-import { PrismaModule } from 'src/prisma/prisma.module';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { OrderService } from './order.service';
-import { OrderController } from './order.controller';
-import { HttpModule, HttpService } from '@nestjs/axios';
-import { MailModule } from 'src/mail/mail.module';
 import { BikashModule } from 'src/bikash/bikash.module';
+import { MailModule } from 'src/mail/mail.module';
+import { PrismaModule } from 'src/prisma/prisma.module';
+import { TasksModule } from 'src/tasks/tasks.module';
+import { OrderController } from './order.controller';
+import { OrderService } from './order.service';
 
 @Module({
   imports: [
@@ -16,7 +16,7 @@ import { BikashModule } from 'src/bikash/bikash.module';
     }),
     MailModule,
     BikashModule,
-    
+    TasksModule,
   ],
   controllers: [OrderController],
   providers: [OrderService],

@@ -14,7 +14,7 @@ import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import { useGetOrderByIdQuery } from '@/lib/services/ordersApi';
-import { PencilIcon } from 'lucide-react';
+import { EyeIcon, PencilIcon } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -31,6 +31,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import Link from 'next/link';
 
 export default function OrderDetailsPage() {
   const { id } = useParams();
@@ -154,32 +155,37 @@ export default function OrderDetailsPage() {
                         : '—'}
                     </TableCell>
                     <TableCell>
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button variant="outline" size="icon">
-                            <PencilIcon className="w-4 h-4" />
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="sm:max-w-lg">
-                          <DialogHeader>
-                            <DialogTitle>Update Payment</DialogTitle>
-                          </DialogHeader>
-                          <DialogDescription>
-                            <Select defaultValue={payment.status}>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select payment status" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="PAID">PAID</SelectItem>
-                                <SelectItem value="DUE">DUE</SelectItem>
-                                <SelectItem value="CANCELLED">
-                                  CANCELLED
-                                </SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </DialogDescription>
-                        </DialogContent>
-                      </Dialog>
+                      <div className="flex items-center gap-5">
+                        <Link href={`/admin/orders/invoice/${payment.id}`}>
+                          <EyeIcon className="w-4 h-4 mr-2" />
+                        </Link>
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button variant="outline" size="icon">
+                              <PencilIcon className="w-4 h-4" />
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="sm:max-w-lg">
+                            <DialogHeader>
+                              <DialogTitle>Update Payment</DialogTitle>
+                            </DialogHeader>
+                            <DialogDescription>
+                              <Select defaultValue={payment.status}>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select payment status" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="PAID">PAID</SelectItem>
+                                  <SelectItem value="DUE">DUE</SelectItem>
+                                  <SelectItem value="CANCELLED">
+                                    CANCELLED
+                                  </SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </DialogDescription>
+                          </DialogContent>
+                        </Dialog>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))

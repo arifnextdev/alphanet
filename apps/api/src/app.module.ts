@@ -1,10 +1,18 @@
+import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
+import { ScheduleModule } from '@nestjs/schedule';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthController } from './auth/auth.controller';
 import { AuthModule } from './auth/auth.module';
 import { AuthService } from './auth/auth.service';
+import { BikashModule } from './bikash/bikash.module';
 import { CupponModule } from './cuppon/cuppon.module';
+import { JobsModule } from './jobs/jobs.module';
+import { OrderReminderService } from './jobs/order-reminder/order-reminder.service';
+import { MailModule } from './mail/mail.module';
+import { MailService } from './mail/mail.service';
+import { PaymentModule } from './payment/payment.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { PrismaService } from './prisma/prisma.service';
 import { OrderController } from './product/order/order.controller';
@@ -15,18 +23,10 @@ import { ProductModule } from './product/product.module';
 import { ProductService } from './product/product.service';
 import { SettingController } from './product/setting/setting.controller';
 import { SettingService } from './product/setting/setting.service';
+import { TasksModule } from './tasks/tasks.module';
 import { UserController } from './user/user.controller';
 import { UserModule } from './user/user.module';
 import { UserService } from './user/user.service';
-import { OrderReminderService } from './jobs/order-reminder/order-reminder.service';
-import { MailService } from './mail/mail.service';
-import { ScheduleModule } from '@nestjs/schedule';
-import { JobsModule } from './jobs/jobs.module';
-import { MailModule } from './mail/mail.module';
-import { BikashModule } from './bikash/bikash.module';
-import { TasksService } from './tasks/tasks.service';
-import { TasksModule } from './tasks/tasks.module';
-import { BullModule } from '@nestjs/bullmq';
 
 @Module({
   imports: [
@@ -36,11 +36,8 @@ import { BullModule } from '@nestjs/bullmq';
         port: 6379,
       },
     }),
-    BullModule.registerQueue({
-      name: 'provision',
-    }),
-    ScheduleModule.forRoot(),
     TasksModule,
+    ScheduleModule.forRoot(),
     PrismaModule,
     AuthModule,
     ProductModule,
@@ -50,6 +47,7 @@ import { BullModule } from '@nestjs/bullmq';
     JobsModule,
     MailModule,
     BikashModule,
+    PaymentModule,
   ],
   controllers: [
     AppController,
@@ -69,7 +67,6 @@ import { BullModule } from '@nestjs/bullmq';
     PrismaService,
     OrderReminderService,
     MailService,
-    TasksService,
   ],
 })
 export class AppModule {}

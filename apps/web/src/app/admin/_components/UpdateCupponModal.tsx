@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 
+import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
 import {
   Dialog,
   DialogContent,
@@ -7,9 +9,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import {
   Select,
   SelectContent,
@@ -17,18 +23,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
+import { ICUPPON, useUpdateCupponMutation } from '@/lib/services/cuppons';
 import { cn } from '@/lib/utils';
-import { CalendarIcon, PencilIcon } from 'lucide-react';
 import { format } from 'date-fns';
-import { Calendar } from '@/components/ui/calendar';
-import { useUpdateCupponMutation } from '@/lib/services/cuppons';
+import { CalendarIcon, PencilIcon } from 'lucide-react';
 
-const UpdateCupponModal = ({ cuppon }: { cuppon: any }) => {
+const UpdateCupponModal = ({ cuppon }: { cuppon: ICUPPON }) => {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({
     discountValue: cuppon.discount,
@@ -43,13 +43,13 @@ const UpdateCupponModal = ({ cuppon }: { cuppon: any }) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const [updateCuppon, { isLoading, error, data }] = useUpdateCupponMutation();
+  const [updateCuppon] = useUpdateCupponMutation();
 
   const handleSubmit = () => {
     //no change then return
     if (
       form.discountValue === cuppon.discount &&
-      form.expiesAt === cuppon.expiesAt &&
+      form.expiesAt === cuppon.expiresAt &&
       form.status === cuppon.status
     ) {
       return;
@@ -59,7 +59,8 @@ const UpdateCupponModal = ({ cuppon }: { cuppon: any }) => {
       data: {
         status: form.status === cuppon.status ? undefined : form.status,
         discount: Number(form.discountValue),
-        expiesAt: form.expiesAt === cuppon.expiesAt ? undefined : form.expiesAt,
+        expiresAt:
+          form.expiesAt === cuppon.expiresAt ? undefined : form.expiesAt,
       },
     });
     setOpen(false);

@@ -19,6 +19,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { GetOrderDto, OrederCreateDto } from '../common/dto/order.dto';
 import { MailService } from 'src/mail/mail.service';
 import { BikashService } from 'src/bikash/bikash.service';
+import { TasksService } from 'src/tasks/tasks.service';
 
 export interface CreateCpanelAccountParams {
   userName: string;
@@ -41,6 +42,8 @@ export class OrderService {
     private readonly http: HttpService,
     private readonly mail: MailService,
     private readonly bikash: BikashService,
+
+    private readonly taskService: TasksService,
   ) {}
 
   async findAll({ limit = 10, page = 1, search, status }: GetOrderDto) {
@@ -379,7 +382,7 @@ export class OrderService {
             amount: product.price,
             vat: vatAmount,
             tax: taxAmount,
-            discount: discountedPrice,
+            discount: discountAmount,
             subtotal: total,
           },
         },
@@ -394,12 +397,14 @@ export class OrderService {
       throw new NotFoundException('Order not found');
     }
 
-    const bikash = this.bikash.createPayment(
-      order.payments[0].subtotal || total,
-      order.payments[0].id,
-    );
+    this.taskService.queueEmail(order.id);
 
-    return bikash;
+    // const bikash = this.bikash.createPayment(
+    //   order.payments[0].subtotal || total,
+    //   order.payments[0].id,
+    // );
+
+    return order;
   }
 
   async createOrders(data: OrederCreateDto) {
