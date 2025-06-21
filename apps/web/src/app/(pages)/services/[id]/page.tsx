@@ -1,6 +1,6 @@
 import dynamic from 'next/dynamic';
 const ServicePage = dynamic(
-  () => import('@/app/services/_components/ServicePage'),
+  () => import('@/app/(pages)/services/_components/ServicePage'),
 );
 
 const serviceData = {

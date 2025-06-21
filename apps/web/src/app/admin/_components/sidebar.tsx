@@ -27,7 +27,7 @@ export default function Header() {
   const pathname = usePathname();
 
   return (
-    <aside className="hidden md:flex h-[calc(100vh-64px)] w-64 flex-col border-r bg-background px-4 py-6 shadow-sm mt-16 ">
+    <aside className="hidden md:flex h-screen w-64 flex-col border-r bg-background px-4 py-6 shadow-sm  ">
       <div className="text-xl font-bold px-2 mb-6">Admin Panel</div>
       <nav className="space-y-2">
         {navItems.map(({ name, href, icon: Icon }) => (

@@ -92,8 +92,10 @@ export class UserService {
             paidAt: true,
             expiresAt: true,
             status: true,
+            product: { select: { name: true, type: true } },
           },
         },
+        payments: true,
         loginHistories: true,
       },
     });

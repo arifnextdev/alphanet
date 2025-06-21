@@ -96,7 +96,7 @@
 // }
 
 // mail.service.ts
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { MailerService } from '@nestjs-modules/mailer';
 import { PrismaService } from 'src/prisma/prisma.service';
 import * as PDFDocument from 'pdfkit';
@@ -110,6 +110,42 @@ export class MailService {
     private readonly mailerService: MailerService,
     private readonly prisma: PrismaService,
   ) {}
+  private readonly Logger = new Logger(MailService.name);
+  async sendEmail(
+    email?: string,
+    description?: string,
+    subject?: string,
+    userId?: string,
+  ) {
+    let userEmail;
+
+    if (!email && userId) {
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { email: true },
+      });
+      if (!user || !user.email) {
+        throw new Error('User not found or email not available');
+      }
+      userEmail = user.email;
+    } else if (email) {
+      userEmail = email;
+    } else {
+      throw new Error('Email or UserId must be provided');
+    }
+
+    const mailOptions = {
+      to: userEmail,
+      subject: subject || 'Order Confirmation',
+      text: description,
+    };
+
+    this.Logger.log(
+      `Sending email to ${userEmail} with subject "${mailOptions.subject}"`,
+      MailService.name,
+    );
+    return this.mailerService.sendMail(mailOptions);
+  }
 
   async sendBasicEmail({ to, subject, htmlContent }) {
     await this.mailerService.sendMail({

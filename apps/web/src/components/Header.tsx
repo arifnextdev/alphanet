@@ -1,12 +1,18 @@
 'use client';
 
-import * as React from 'react';
-import Link from 'next/link';
+import { ChevronDown, Menu, Moon, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
-import { Moon, Sun, Menu } from 'lucide-react';
+import Link from 'next/link';
 
-import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -16,12 +22,12 @@ import {
   NavigationMenuTrigger,
 } from '@/components/ui/navigation-menu';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { useDispatch, useSelector } from 'react-redux';
-import { RootState } from '@/lib/store';
-import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
-import { setAuth } from '@/lib/slices/authSlice';
 import { useLogoutMutation } from '@/lib/services/auth';
+import { setAuth } from '@/lib/slices/authSlice';
+import { RootState } from '@/lib/store';
 import { useRouter } from 'next/navigation';
+import { useDispatch, useSelector } from 'react-redux';
+import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 
 const menuData = [
   {
@@ -153,10 +159,46 @@ const Header = () => {
 
           {authUser ? (
             <>
-              <Avatar>
-                <AvatarImage src={authUser.avatar || ''} />
-                <AvatarFallback>{authUser.name.charAt(0)}</AvatarFallback>
-              </Avatar>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className="flex items-center space-x-2 hover:bg-gray-800"
+                  >
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage
+                        src={authUser.avatar || '/placeholder.svg'}
+                      />
+                      <AvatarFallback className="bg-blue-600">
+                        {authUser.name
+                          .split(' ')
+                          .map((n) => n[0])
+                          .join('')}
+                      </AvatarFallback>
+                    </Avatar>
+                    <ChevronDown className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="end"
+                  className="w-56 bg-gray-800 border-gray-700"
+                >
+                  <DropdownMenuLabel className="text-gray-200">
+                    My Account
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator className="bg-gray-700" />
+                  <DropdownMenuItem className="hover:bg-gray-700 text-gray-200">
+                    <Link href={`/users/${authUser.id}`}>Dashboard</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="hover:bg-gray-700 text-gray-200">
+                    <Link href={`/users/${authUser.id}`}>Profile</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator className="bg-gray-700" />
+                  <DropdownMenuItem className="hover:bg-gray-700 text-gray-200">
+                    Logout
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <Link
                 href="/auth/logout"
                 className="block text-foreground hover:text-primary"

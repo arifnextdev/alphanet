@@ -8,6 +8,21 @@ interface IGetUsersParams {
   search?: string;
 }
 
+export interface Payment {
+  id: string;
+  amount: number;
+  method: string;
+  transId: string;
+  currency: string;
+  tax: number;
+  vat: number;
+  discount: number;
+  subtotal: number;
+  status: string;
+  createdAt: string;
+  paidAt: string | null;
+}
+
 export interface IUser {
   id: string;
   name: string;
@@ -16,6 +31,33 @@ export interface IUser {
   provider: string;
   roles: string[];
   avatar?: string | null;
+}
+
+export interface Order {
+  id: string;
+  domainName: string;
+  amount: number;
+  paidAt: string | null;
+  expiresAt: string | null;
+  status: string;
+  product: {
+    name: string;
+    type: string;
+  };
+}
+
+export interface UserProfile {
+  id: string;
+  name: string;
+  email: string;
+  status: string;
+  avatar: string | null;
+  roles: string[];
+  createdAt: string;
+  updatedAt: string;
+  orders: Order[];
+  payments: Payment[];
+  loginHistories: any[];
 }
 
 interface IPagination {
@@ -50,7 +92,7 @@ export const usersApi = createApi({
       }),
       providesTags: ['Users'],
     }),
-    getUserById: builder.query<IUser, string>({
+    getUserById: builder.query<UserProfile, string>({
       query: (id) => ({
         url: `users/${id}`,
       }),

@@ -1,10 +1,12 @@
+import Footer from '@/components/Footer';
+
 import { ThemeProvider } from '@/components/theme-provider';
 import { Toaster } from '@/components/ui/sonner';
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import '@/app/globals.css';
 import { Providers } from '../providers';
-import Header from './_components/sidebar';
+import Header from '@/components/Header';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -21,11 +23,11 @@ export const metadata: Metadata = {
   description: 'Alpha Net - Your Ultimate Hosting Solution',
 };
 
-export default function AdminLayout({
+export default function RootLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode;
-}) {
+}>) {
   return (
     <html lang="en">
       <body
@@ -33,12 +35,9 @@ export default function AdminLayout({
       >
         <Providers>
           <ThemeProvider attribute="class" defaultTheme="system">
-            <div className="flex">
-              <Header />
-              <main className="flex-1 p-6 min-h-screen pt-10 overflow-hidden">
-                {children}
-              </main>
-            </div>
+            <Header />
+            <main className="w-full ">{children}</main>
+            <Footer />
           </ThemeProvider>
         </Providers>
         <Toaster />
