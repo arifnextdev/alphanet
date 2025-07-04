@@ -29,6 +29,7 @@ import { OrderModalForm } from './_components/OrderModalForm';
 
 import Link from 'next/link';
 import MailModal from './_components/MailModal';
+import ToggoleStatus from './_components/ToggoleStatus';
 
 export default function OrderPage() {
   const [query, setQuery] = useState('');
@@ -142,18 +143,21 @@ export default function OrderPage() {
                         : '—'}
                     </TableCell>
                     <TableCell className="text-right flex justify-end gap-3 items-center">
-                      <Button
-                        variant="ghost"
-                        className="p-1 cursor-copy"
-                        onClick={() => {
-                          navigator.clipboard.writeText(order.id);
-                        }}
-                      >
-                        <Copy size={16} />
-                      </Button>
+                      <ToggoleStatus
+                        id={order.id}
+                        options={[
+                          'PAID',
+                          'CANCELLED',
+                          'REFUNDED',
+                          'EXPIRED',
+                        ]}
+                        status={order.status}
+                        url={`orders/${order.id}/status`}
+                      />
                       <Link href={`/admin/orders/${order.id}`}>
                         <EyeIcon className="w-5 h-5" />
                       </Link>
+
                       <MailModal id={order.userId} />
                     </TableCell>
                   </TableRow>

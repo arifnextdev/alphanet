@@ -52,7 +52,7 @@ export default function OrderDetailsPage() {
     order ?? data;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 mx-20 my-10">
       {/* Order Summary */}
       <Card>
         <CardHeader>
@@ -156,35 +156,9 @@ export default function OrderDetailsPage() {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-5">
-                        <Link href={`/admin/orders/invoice/${payment.id}`}>
+                        <Link href={`/users/orders/invoice/${payment.id}`}>
                           <EyeIcon className="w-4 h-4 mr-2" />
                         </Link>
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button variant="outline" size="icon">
-                              <PencilIcon className="w-4 h-4" />
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="sm:max-w-lg">
-                            <DialogHeader>
-                              <DialogTitle>Update Payment</DialogTitle>
-                            </DialogHeader>
-                            <DialogDescription>
-                              <Select defaultValue={payment.status}>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select payment status" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="PAID">PAID</SelectItem>
-                                  <SelectItem value="DUE">DUE</SelectItem>
-                                  <SelectItem value="CANCELLED">
-                                    CANCELLED
-                                  </SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </DialogDescription>
-                          </DialogContent>
-                        </Dialog>
                       </div>
                     </TableCell>
                   </TableRow>

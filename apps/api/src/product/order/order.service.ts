@@ -1,3 +1,6 @@
+import { ExtractJwt } from 'passport-jwt';
+import { Geist_Mono } from 'next/font/google';
+import { OrderStatus } from './../../../../web/src/types/type';
 import { HttpService } from '@nestjs/axios';
 import {
   startOfDay,
@@ -20,6 +23,7 @@ import { GetOrderDto, OrederCreateDto } from '../common/dto/order.dto';
 import { MailService } from 'src/mail/mail.service';
 import { BikashService } from 'src/bikash/bikash.service';
 import { TasksService } from 'src/tasks/tasks.service';
+import { orderStatusSchema } from '../common/dto/order.status.dto';
 
 export interface CreateCpanelAccountParams {
   userName: string;
@@ -550,6 +554,23 @@ export class OrderService {
     //   });
     //   throw new ConflictException('Order created but cPanel setup failed');
     // }
+  }
+
+  async updatedOrderStatus(id: string, status: string) {
+    const parseStatus = orderStatusSchema.safeParse(status);
+    if (!parseStatus.success) {
+      throw new ConflictException('Invalid status format');
+    }
+    const order = await this.prisma.order.update({
+      where: { id },
+      data: { status: parseStatus.data.status },
+    });
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+    return {
+      message: 'Order status updated successfully',
+    };
   }
 
   //Create Due Payment

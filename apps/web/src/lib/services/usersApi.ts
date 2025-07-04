@@ -1,3 +1,4 @@
+import { Phone } from 'lucide-react';
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
 interface IGetUsersParams {
@@ -27,6 +28,7 @@ export interface IUser {
   id: string;
   name: string;
   email: string;
+  phone: string;
   status: string;
   provider: string;
   roles: string[];
@@ -38,7 +40,7 @@ export interface Order {
   domainName: string;
   amount: number;
   paidAt: string | null;
-  expiresAt: string | null;
+  expiresAt: Date | null;
   status: string;
   product: {
     name: string;
@@ -46,11 +48,20 @@ export interface Order {
   };
 }
 
+interface userinfo {
+  street: string;
+  city: string;
+  state: string;
+  country: string;
+  postalCode: string;
+}
+
 export interface UserProfile {
   id: string;
   name: string;
   email: string;
   status: string;
+  phone: string;
   avatar: string | null;
   roles: string[];
   createdAt: string;
@@ -58,6 +69,18 @@ export interface UserProfile {
   orders: Order[];
   payments: Payment[];
   loginHistories: any[];
+  userInfo: userinfo;
+}
+
+export interface updateUser {
+  name?: string;
+  phone?: string;
+  street?: string;
+  city?: string;
+  state?: string;
+  zip: string;
+  postalCode?: string;
+  country?: string;
 }
 
 interface IPagination {
@@ -97,7 +120,10 @@ export const usersApi = createApi({
         url: `users/${id}`,
       }),
     }),
-    updateUser: builder.mutation<IUser, { id: string; data: Partial<IUser> }>({
+    updateUser: builder.mutation<
+      IUser,
+      { id: string; data: Partial<updateUser> }
+    >({
       query: ({ id, data }) => ({
         url: `users/${id}`,
         method: 'PUT',

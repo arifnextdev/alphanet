@@ -6,9 +6,12 @@ import {
   Param,
   Put,
   Query,
+  UsePipes,
 } from '@nestjs/common';
 import { UpdateUserDto } from 'src/auth/dto/user.dto';
 import { UserService } from './user.service';
+import { ZodValidationPipe } from 'src/product/common/zodValidationPipe';
+import { userUpdateSchema } from './dto/userUpdate.dto';
 
 @Controller('users')
 export class UserController {
@@ -37,7 +40,6 @@ export class UserController {
   getUserById(@Param('id') id: string) {
     return this.userService.getUserById(id);
   }
-
 
   @Put(':id')
   updateUser(@Param('id') id: string, @Body() data: UpdateUserDto) {

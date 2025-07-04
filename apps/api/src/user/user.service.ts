@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { UpdateUserDto } from 'src/auth/dto/user.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { userUpdateSchema } from './dto/userUpdate.dto';
 
 @Injectable()
 export class UserService {
@@ -79,11 +80,13 @@ export class UserService {
         id: true,
         name: true,
         email: true,
+        phone: true,
         avatar: true,
         roles: true,
         status: true,
         createdAt: true,
         updatedAt: true,
+        userInfo: true,
         orders: {
           select: {
             id: true,
@@ -108,7 +111,50 @@ export class UserService {
 
   //Update a User by ID
   async updateUser(id: string, data: UpdateUserDto) {
-    return await this.prisma.user.update({ where: { id }, data });
+    const parsebody = userUpdateSchema.safeParse(data);
+    if (!parsebody.success) {
+      throw new Error('Invalid data format');
+    }
+
+    const updateUser = await this.prisma.user.findUnique({ where: { id } });
+    if (!updateUser) {
+      throw new NotFoundException('User not found');
+    }
+
+    console.log('Parsed Data:', parsebody.data);
+
+    await this.prisma.user.update({
+      where: { id },
+      data: {
+        name: parsebody.data.name,
+        phone: parsebody.data.phone,
+        userInfo: {
+          update: {
+            street: parsebody.data.street,
+            city: parsebody.data.city,
+            state: parsebody.data.state,
+            country: parsebody.data.country,
+            postalCode: parsebody.data.postalCode,
+          },
+        },
+      },
+    });
+
+    // await this.prisma.userInfo.upsert({
+    //   where: { userId: id },
+    //   update: {
+
+    //   },
+    //   create: {
+    //     userId: id,
+    //     street: parsebody.data.street,
+    //     city: parsebody.data.city,
+    //     state: parsebody.data.state,
+    //     country: parsebody.data.country,
+    //     postalCode: parsebody.data.postalCode,
+    //   },
+    // });
+    return { message: 'User updated successfully' };
   }
 
   //Delete a User by ID

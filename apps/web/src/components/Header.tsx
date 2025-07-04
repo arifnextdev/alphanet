@@ -161,10 +161,7 @@ const Header = () => {
             <>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    className="flex items-center space-x-2 hover:bg-gray-800"
-                  >
+                  <Button variant="ghost" className="flex items-center  ">
                     <Avatar className="h-8 w-8">
                       <AvatarImage
                         src={authUser.avatar || '/placeholder.svg'}
@@ -179,24 +176,25 @@ const Header = () => {
                     <ChevronDown className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  align="end"
-                  className="w-56 bg-gray-800 border-gray-700"
-                >
-                  <DropdownMenuLabel className="text-gray-200">
-                    My Account
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator className="bg-gray-700" />
-                  <DropdownMenuItem className="hover:bg-gray-700 text-gray-200">
-                    <Link href={`/users/${authUser.id}`}>Dashboard</Link>
+                <DropdownMenuContent align="end" className="w-56 ">
+                  <DropdownMenuLabel className="">My Account</DropdownMenuLabel>
+                  <DropdownMenuSeparator className="" />
+                  <DropdownMenuItem className=" ">
+                    <Link
+                      href={
+                        authUser.roles.includes('ADMIN')
+                          ? `/admin/dashboard`
+                          : `/users/${authUser.id}`
+                      }
+                    >
+                      Dashboard
+                    </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="hover:bg-gray-700 text-gray-200">
+                  <DropdownMenuItem className="">
                     <Link href={`/users/${authUser.id}`}>Profile</Link>
                   </DropdownMenuItem>
-                  <DropdownMenuSeparator className="bg-gray-700" />
-                  <DropdownMenuItem className="hover:bg-gray-700 text-gray-200">
-                    Logout
-                  </DropdownMenuItem>
+                  <DropdownMenuSeparator className="" />
+                  <DropdownMenuItem className="">Logout</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
               <Link

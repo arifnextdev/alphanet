@@ -1,16 +1,7 @@
 'use client';
 
+import { Camera, Eye, LoaderIcon, Save, Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import {
-  ArrowLeft,
-  Bell,
-  Camera,
-  ChevronDown,
-  Download,
-  Eye,
-  Save,
-  Search,
-} from 'lucide-react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -22,14 +13,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -48,10 +31,17 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Order,
+  Payment,
+  useGetUserByIdQuery,
+  useUpdateUserMutation,
+} from '@/lib/services/usersApi';
+import { RootState } from '@/lib/store';
 import Link from 'next/link';
 import { useSelector } from 'react-redux';
-import { RootState } from '@/lib/store';
-import { Order, Payment, useGetUserByIdQuery } from '@/lib/services/usersApi';
+import { formateDate } from '@/lib/utils';
+import { toast } from 'sonner';
 
 // Static data - replace with API calls
 const customerProfile = {
@@ -183,14 +173,23 @@ const customerProfile = {
 export default function CustomerProfile({ id }: { id: string }) {
   const [activeTab, setActiveTab] = useState('orders');
   const [isEditing, setIsEditing] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
   const [orders, setOrders] = useState<Order[]>([]); // Placeholder for orders data
   const [transactions, setTransactions] = useState<Payment[]>([]); // Placeholder for transactions data
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    street: '',
+    city: '',
+    state: '',
+    country: '',
+    postalCode: '',
+  });
 
   const authuser = useSelector((state: RootState) => state.auth.user);
   if (!authuser) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-900 text-white">
+      <div className="flex items-center justify-center min-h-screen bg-gray-900 ">
         <div className="text-center">
           <h1 className="text-4xl font-bold mb-4">Access Denied</h1>
           <p className="text-lg mb-6">
@@ -208,24 +207,44 @@ export default function CustomerProfile({ id }: { id: string }) {
   }
 
   const { data, isLoading } = useGetUserByIdQuery(id as string);
+  const [updateUser, { isLoading: isUpdating, data: updatedUser }] =
+    useUpdateUserMutation();
 
   useEffect(() => {
     if (data) {
       setOrders(data.orders);
       setTransactions(data.payments);
+      setFormData({
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        street: data.userInfo.street,
+        city: data.userInfo.city,
+        state: data.userInfo.state,
+        country: data.userInfo.country,
+        postalCode: data.userInfo.postalCode,
+      });
     }
   }, [data]);
 
-  const [formData, setFormData] = useState({
-    name: customerProfile.name,
-    email: customerProfile.email,
-    phone: customerProfile.phone,
-    street: customerProfile.address.street,
-    city: customerProfile.address.city,
-    state: customerProfile.address.state,
-    country: customerProfile.address.country,
-    postalCode: customerProfile.address.postalCode,
-  });
+  if (!data) {
+    return (
+      <div className="flex items-center justify-center min-h-screen ">
+        <div className="text-center">
+          <h1 className="text-4xl font-bold mb-4">Loading...</h1>
+        </div>
+      </div>
+    );
+  }
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen ">
+        <div className="text-center">
+          <h1 className="text-4xl font-bold mb-4">Loading...</h1>
+        </div>
+      </div>
+    );
+  }
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -233,80 +252,44 @@ export default function CustomerProfile({ id }: { id: string }) {
 
   const handleSave = () => {
     console.log('Saving profile data:', formData);
-    setIsEditing(false);
+    updateUser({
+      id: data.id,
+      data: {
+        name: formData.name,
+        phone: formData.phone,
+        street: formData.street,
+        city: formData.city,
+        state: formData.state,
+        country: formData.country,
+        postalCode: formData.postalCode,
+      },
+    })
+      .unwrap()
+      .then(() => {
+        toast.success('Profile updated successfully');
+      })
+      .catch((error) => {
+        toast.error('Failed to update profile');
+        console.error('Error updating profile:', error);
+      })
+      .finally(() => {
+        // Reset form data after successful update
+        setIsEditing(false);
+      });
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
-      {/* Header */}
-      <header className="border-b border-gray-800 bg-gray-900/95 backdrop-blur">
-        <div className="flex h-16 items-center px-4 lg:px-6">
-          <Link href="/" className="mr-4 hover:bg-gray-800">
-            <ArrowLeft className="h-4 w-4" />
-          </Link>
-          <div className="flex items-center space-x-4">
-            <h1 className="text-xl font-semibold">Profile Settings</h1>
-          </div>
-          <div className="ml-auto flex items-center space-x-4">
-            <Button variant="ghost" size="icon" className="hover:bg-gray-800">
-              <Bell className="h-4 w-4" />
-            </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="flex items-center space-x-2 hover:bg-gray-800"
-                >
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage
-                      src={customerProfile.avatar || '/placeholder.svg'}
-                    />
-                    <AvatarFallback className="bg-blue-600">
-                      {customerProfile.name
-                        .split(' ')
-                        .map((n) => n[0])
-                        .join('')}
-                    </AvatarFallback>
-                  </Avatar>
-                  <ChevronDown className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="end"
-                className="w-56 bg-gray-800 border-gray-700"
-              >
-                <DropdownMenuLabel className="text-gray-200">
-                  My Account
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator className="bg-gray-700" />
-                <DropdownMenuItem className="hover:bg-gray-700 text-gray-200">
-                  Dashboard
-                </DropdownMenuItem>
-                <DropdownMenuItem className="hover:bg-gray-700 text-gray-200">
-                  Settings
-                </DropdownMenuItem>
-                <DropdownMenuSeparator className="bg-gray-700" />
-                <DropdownMenuItem className="hover:bg-gray-700 text-gray-200">
-                  Logout
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
-      </header>
-
-      <div className="container mx-auto px-4 py-6 max-w-6xl lg:max-w-[80vw]">
+    <div className="min-h-screen ">
+      <div className=" mx-auto px-4 py-6 max-w-6xl lg:max-w-[80vw]">
         {/* Profile Header */}
-        <Card className="bg-gray-800 border-gray-700 mb-6">
+        <Card className="  mb-6">
           <CardContent className="p-6">
             <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
               <div className="relative">
                 <Avatar className="h-24 w-24">
-                  <AvatarImage
-                    src={customerProfile.avatar || '/placeholder.svg'}
-                  />
-                  <AvatarFallback className="text-2xl bg-blue-600">
-                    {customerProfile.name
+                  <AvatarImage src={data.avatar || '/placeholder.svg'} />
+                  <AvatarFallback className="text-2xl ">
+                    {data.name
                       .split(' ')
                       .map((n) => n[0])
                       .join('')}
@@ -314,7 +297,7 @@ export default function CustomerProfile({ id }: { id: string }) {
                 </Avatar>
                 <Button
                   size="icon"
-                  className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full bg-blue-600 hover:bg-blue-700"
+                  className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full "
                 >
                   <Camera className="h-4 w-4" />
                 </Button>
@@ -323,16 +306,15 @@ export default function CustomerProfile({ id }: { id: string }) {
               <div className="flex-1">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                   <div>
-                    <h2 className="text-2xl font-bold text-white">
-                      {customerProfile.name}
-                    </h2>
-                    <p className="text-gray-400">{customerProfile.email}</p>
+                    <h2 className="text-2xl font-bold ">{data.name}</h2>
+                    <p className="text-gray-400">{data.email}</p>
                     <div className="flex items-center gap-4 mt-2">
                       <Badge className="bg-green-600 hover:bg-green-700">
-                        {customerProfile.accountStatus}
+                        {data.status}
                       </Badge>
                       <span className="text-sm text-gray-400">
-                        Member since {customerProfile.joinDate}
+                        Member since{' '}
+                        {data.createdAt && formateDate(data.createdAt)}
                       </span>
                     </div>
                   </div>
@@ -343,7 +325,7 @@ export default function CustomerProfile({ id }: { id: string }) {
                         <Button
                           variant="outline"
                           onClick={() => setIsEditing(false)}
-                          className="border-gray-600 text-gray-200 hover:bg-gray-700"
+                          className=" "
                         >
                           Cancel
                         </Button>
@@ -351,7 +333,7 @@ export default function CustomerProfile({ id }: { id: string }) {
                           onClick={handleSave}
                           className="bg-blue-600 hover:bg-blue-700"
                         >
-                          <Save className="mr-2 h-4 w-4" />
+                          {isUpdating ? <LoaderIcon className='h-4 w-4 animate-spin'/> : <Save className="h-4 w-4 mr-2" />}
                           Save Changes
                         </Button>
                       </>
@@ -373,111 +355,82 @@ export default function CustomerProfile({ id }: { id: string }) {
         {/* Profile Information Cards */}
         {isEditing && (
           <div className="grid gap-6 lg:grid-cols-2 mb-6">
-            <Card className="bg-gray-800 border-gray-700">
+            <Card className="">
               <CardHeader>
-                <CardTitle className="text-white">Basic Information</CardTitle>
-                <CardDescription className="text-gray-400">
+                <CardTitle className="">Basic Information</CardTitle>
+                <CardDescription className="">
                   Update your personal details
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <Label htmlFor="firstName" className="text-gray-200">
-                      First Name
-                    </Label>
-                    <Input
-                      id="firstName"
-                      value={formData.name.split(' ')[0]}
-                      onChange={(e) =>
-                        handleInputChange(
-                          'name',
-                          `${e.target.value} ${formData.name.split(' ')[1] || ''}`,
-                        )
-                      }
-                      className="bg-gray-700 border-gray-600 text-white"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="lastName" className="text-gray-200">
-                      Last Name
-                    </Label>
-                    <Input
-                      id="lastName"
-                      value={formData.name.split(' ')[1] || ''}
-                      onChange={(e) =>
-                        handleInputChange(
-                          'name',
-                          `${formData.name.split(' ')[0]} ${e.target.value}`,
-                        )
-                      }
-                      className="bg-gray-700 border-gray-600 text-white"
-                    />
-                  </div>
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="firstName" className="">
+                    Name
+                  </Label>
+                  <Input
+                    id="name"
+                    value={formData.name}
+                    onChange={(e) => handleInputChange('name', e.target.value)}
+                    className=""
+                  />
                 </div>
 
-                <div>
-                  <Label htmlFor="email" className="text-gray-200">
-                    Email Address
-                  </Label>
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="email">Email Address</Label>
                   <div className="flex items-center gap-2">
                     <Input
                       id="email"
                       type="email"
                       value={formData.email}
-                      onChange={(e) =>
-                        handleInputChange('email', e.target.value)
-                      }
-                      className="bg-gray-700 border-gray-600 text-white"
+                      disabled
+                      className=""
                     />
-                    {customerProfile.emailVerified ? (
+                    {/* {customerProfile.emailVerified ? (
                       <Badge className="bg-green-600 hover:bg-green-700">
                         Verified
                       </Badge>
                     ) : (
                       <Badge variant="destructive">Unverified</Badge>
-                    )}
+                    )} */}
                   </div>
                 </div>
 
-                <div>
-                  <Label htmlFor="phone" className="text-gray-200">
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="phone" className="">
                     Phone Number
                   </Label>
                   <div className="flex items-center gap-2">
                     <Input
                       id="phone"
-                      type="tel"
+                      type="text"
                       value={formData.phone}
                       onChange={(e) =>
                         handleInputChange('phone', e.target.value)
                       }
-                      className="bg-gray-700 border-gray-600 text-white"
+                      className=""
                     />
-                    {customerProfile.phoneVerified ? (
+                    {/* {customerProfile.phoneVerified ? (
                       <Badge className="bg-green-600 hover:bg-green-700">
                         Verified
                       </Badge>
                     ) : (
                       <Badge variant="destructive">Unverified</Badge>
-                    )}
+                    )} */}
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="bg-gray-800 border-gray-700">
+            <Card className="">
               <CardHeader>
-                <CardTitle className="text-white">
-                  Address Information
-                </CardTitle>
+                <CardTitle className="">Address Information</CardTitle>
                 <CardDescription className="text-gray-400">
                   Your billing and contact address
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div>
-                  <Label htmlFor="street" className="text-gray-200">
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="street" className="">
                     Street Address
                   </Label>
                   <Input
@@ -486,13 +439,13 @@ export default function CustomerProfile({ id }: { id: string }) {
                     onChange={(e) =>
                       handleInputChange('street', e.target.value)
                     }
-                    className="bg-gray-700 border-gray-600 text-white"
+                    className=""
                   />
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <Label htmlFor="city" className="text-gray-200">
+                  <div className="flex flex-col gap-2">
+                    <Label htmlFor="city" className="">
                       City
                     </Label>
                     <Input
@@ -501,11 +454,11 @@ export default function CustomerProfile({ id }: { id: string }) {
                       onChange={(e) =>
                         handleInputChange('city', e.target.value)
                       }
-                      className="bg-gray-700 border-gray-600 text-white"
+                      className=""
                     />
                   </div>
-                  <div>
-                    <Label htmlFor="state" className="text-gray-200">
+                  <div className="flex flex-col gap-2">
+                    <Label htmlFor="state" className="">
                       State/Province
                     </Label>
                     <Input
@@ -514,21 +467,21 @@ export default function CustomerProfile({ id }: { id: string }) {
                       onChange={(e) =>
                         handleInputChange('state', e.target.value)
                       }
-                      className="bg-gray-700 border-gray-600 text-white"
+                      className=""
                     />
                   </div>
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <Label htmlFor="country" className="text-gray-200">
+                  <div className="flex flex-col gap-2">
+                    <Label htmlFor="country" className="">
                       Country
                     </Label>
                     <Select>
-                      <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
+                      <SelectTrigger className="">
                         <SelectValue placeholder={formData.country} />
                       </SelectTrigger>
-                      <SelectContent className="bg-gray-800 border-gray-700">
+                      <SelectContent className="">
                         <SelectItem value="bangladesh">Bangladesh</SelectItem>
                         <SelectItem value="india">India</SelectItem>
                         <SelectItem value="pakistan">Pakistan</SelectItem>
@@ -536,8 +489,8 @@ export default function CustomerProfile({ id }: { id: string }) {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div>
-                    <Label htmlFor="postalCode" className="text-gray-200">
+                  <div className="flex flex-col gap-2">
+                    <Label htmlFor="postalCode" className="">
                       Postal Code
                     </Label>
                     <Input
@@ -546,7 +499,7 @@ export default function CustomerProfile({ id }: { id: string }) {
                       onChange={(e) =>
                         handleInputChange('postalCode', e.target.value)
                       }
-                      className="bg-gray-700 border-gray-600 text-white"
+                      className=""
                     />
                   </div>
                 </div>
@@ -557,16 +510,16 @@ export default function CustomerProfile({ id }: { id: string }) {
 
         {/* History Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-2 bg-gray-800 mb-6">
+          <TabsList className="grid w-full grid-cols-2 ">
             <TabsTrigger
               value="orders"
-              className="data-[state=active]:bg-gray-700 data-[state=active]:text-white"
+              className="data-[state=active]:bg-blue-500 data-[state=active]:"
             >
               Order History
             </TabsTrigger>
             <TabsTrigger
               value="payments"
-              className="data-[state=active]:bg-gray-700 data-[state=active]:text-white"
+              className="data-[state=active]:bg-blue-500 data-[state=active]:text-primary"
             >
               Payment History
             </TabsTrigger>
@@ -576,105 +529,72 @@ export default function CustomerProfile({ id }: { id: string }) {
           <TabsContent value="orders" className="space-y-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div>
-                <h2 className="text-2xl font-bold text-white">Order History</h2>
-                <p className="text-gray-400">View and track your orders</p>
-              </div>
-              <div className="flex gap-2">
-                <div className="relative">
-                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
-                  <Input
-                    placeholder="Search orders..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-8 bg-gray-800 border-gray-700 text-white"
-                  />
-                </div>
-                <Select defaultValue="all">
-                  <SelectTrigger className="w-32 bg-gray-800 border-gray-700 text-white">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-gray-800 border-gray-700">
-                    <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="completed">Completed</SelectItem>
-                    <SelectItem value="cancelled">Cancelled</SelectItem>
-                  </SelectContent>
-                </Select>
+                <h2 className="text-2xl font-bold ">Order History</h2>
+                <p className="">View and track your orders</p>
               </div>
             </div>
 
-            <Card className="bg-gray-800 border-gray-700">
+            <Card className="">
               <CardContent className="p-3">
                 <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
-                      <TableRow className="border-gray-700">
-                        <TableHead className="text-gray-300">
-                          Order ID
-                        </TableHead>
-                        <TableHead className="text-gray-300">
-                          Product Name
-                        </TableHead>
-                        <TableHead className="text-gray-300">Type</TableHead>
-                        <TableHead className="text-gray-300">Amount</TableHead>
-                        <TableHead className="text-gray-300">Status</TableHead>
-                        <TableHead className="text-gray-300">Date</TableHead>
-                        <TableHead className="text-gray-300">
-                          Expires At
-                        </TableHead>
-                        <TableHead className="text-gray-300">Actions</TableHead>
+                      <TableRow className="">
+                        <TableHead className="">Order No</TableHead>
+                        <TableHead className="">Product Name</TableHead>
+                        <TableHead className="">Type</TableHead>
+                        <TableHead className="">Amount</TableHead>
+                        <TableHead className="">Status</TableHead>
+                        <TableHead className="">Paid At</TableHead>
+                        <TableHead className="">Expires At</TableHead>
+                        <TableHead className="">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {orders.map((order) => (
-                        <TableRow key={order.id} className="border-gray-700">
-                          <TableCell className="font-mono text-sm text-gray-300">
-                            {order.id.substring(0, 8)}...
+                      {orders.map((order, i) => (
+                        <TableRow key={order.id} className="py-5">
+                          <TableCell className="font-mono text-sm ">
+                            {i + 1}
                           </TableCell>
-                          <TableCell className="font-mono text-sm text-gray-300">
-                            {order.product.name.substring(0, 8)}...
+                          <TableCell className="font-mono text-sm ">
+                            {order.product.name.substring(0, 20)}{' '}
+                            {order.product.name.length > 20 ? '...' : ''}
                           </TableCell>
-                          <TableCell className="text-white">
+                          <TableCell className="">
                             {order.product.type}
                           </TableCell>
-                          <TableCell className="text-white">
-                            {order.amount}
-                          </TableCell>
+                          <TableCell className="">{order.amount}</TableCell>
                           <TableCell>
                             <Badge
                               className={
                                 order.status === 'Completed'
                                   ? 'bg-green-600 hover:bg-green-700'
                                   : order.status === 'Pending'
-                                    ? 'bg-orange-600 hover:bg-orange-700'
-                                    : 'bg-red-600 hover:bg-red-700'
+                                    ? 'bg-orange-600 hover:bg-orange-700 text-white'
+                                    : 'bg-red-600 hover:bg-red-700 text-white'
                               }
                             >
                               {order.status}
                             </Badge>
                           </TableCell>
-                          <TableCell className="text-gray-300">
-                            {order.paidAt ? order.paidAt : '—'}
+                          <TableCell className="">
+                            {order.paidAt ? formateDate(order.paidAt) : '—'}
                           </TableCell>
-                          <TableCell className="text-gray-300">
-                            {order.expiresAt}
+                          <TableCell
+                            className={`${order.expiresAt ? (order.expiresAt < new Date() ? 'text-red-600' : '') : ''}`}
+                          >
+                            {order.expiresAt
+                              ? formateDate(String(order.expiresAt))
+                              : '—'}
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="text-right">
                             <div className="flex gap-2">
-                              <Button
-                                variant="ghost"
-                                size="icon"
+                              <Link
+                                href={`/users/orders/${order.id}`}
                                 className="hover:bg-gray-700"
                               >
                                 <Eye className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="hover:bg-gray-700"
-                              >
-                                <Download className="h-4 w-4" />
-                              </Button>
+                              </Link>
                             </div>
                           </TableCell>
                         </TableRow>
@@ -690,67 +610,65 @@ export default function CustomerProfile({ id }: { id: string }) {
           <TabsContent value="payments" className="space-y-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div>
-                <h2 className="text-2xl font-bold text-white">
-                  Payment History
-                </h2>
-                <p className="text-gray-400">
-                  View your payment and billing history
-                </p>
+                <h2 className="text-2xl font-bold ">Payment History</h2>
+                <p className="">View your payment and billing history</p>
               </div>
               <div className="flex gap-2">
-                <Select defaultValue="last30days">
-                  <SelectTrigger className="w-36 bg-gray-800 border-gray-700 text-white">
+                <Select
+                  defaultValue="last30days"
+                  onValueChange={(value) => {
+                    // Handle date range change
+                    console.log('Selected date range:', value);
+                  }}
+                >
+                  <SelectTrigger className="w-36  ">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-gray-800 border-gray-700">
+                  <SelectContent className="">
+                    <SelectItem value="all">All Time</SelectItem>
                     <SelectItem value="last7days">Last 7 days</SelectItem>
                     <SelectItem value="last30days">Last 30 days</SelectItem>
                     <SelectItem value="last90days">Last 90 days</SelectItem>
                   </SelectContent>
                 </Select>
-                <Select defaultValue="all">
-                  <SelectTrigger className="w-24 bg-gray-800 border-gray-700 text-white">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-gray-800 border-gray-700">
-                    <SelectItem value="all">All</SelectItem>
-                    <SelectItem value="paid">Paid</SelectItem>
-                    <SelectItem value="due">Due</SelectItem>
-                  </SelectContent>
-                </Select>
               </div>
             </div>
 
-            <Card className="bg-gray-800 border-gray-700">
+            <Card className="">
               <CardContent className="p-3">
                 <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
                       <TableRow className="border-gray-700">
-                        <TableHead className="text-gray-300">Method</TableHead>
-                        <TableHead className="text-gray-300">Amount</TableHead>
-                        <TableHead className="text-gray-300">
-                          Sub Total
-                        </TableHead>
-                        <TableHead className="text-gray-300">Status</TableHead>
-                        <TableHead className="text-gray-300">Date</TableHead>
+                        <TableHead className="">Payment No</TableHead>
+                        <TableHead className="">Transaction ID</TableHead>
+                        <TableHead className="">Method</TableHead>
+                        <TableHead className="">Amount</TableHead>
+                        <TableHead className="">Sub Total</TableHead>
+                        <TableHead className="">Status</TableHead>
+                        <TableHead className="">Paid At</TableHead>
 
-                        <TableHead className="text-gray-300">Actions</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {transactions.map((transaction) => (
-                        <TableRow
-                          key={transaction.id}
-                          className="border-gray-700"
-                        >
-                          <TableCell className="text-gray-300">
+                      {transactions.map((transaction, i) => (
+                        <TableRow key={transaction.id} className="">
+                          <TableCell className="font-mono text-sm ">
+                            {i + 1}
+                          </TableCell>
+                          <TableCell className="font-mono text-sm ">
+                            {transaction.transId
+                              ? transaction.transId
+                              : transaction.id}
+                          </TableCell>
+                          <TableCell className="">
                             {transaction.method}
                           </TableCell>
-                          <TableCell className="text-white">
+                          <TableCell className="">
                             {transaction.amount}
                           </TableCell>
-                          <TableCell className="text-gray-300">
+                          <TableCell className="">
                             {transaction.subtotal}
                           </TableCell>
                           <TableCell>
@@ -758,24 +676,25 @@ export default function CustomerProfile({ id }: { id: string }) {
                               className={
                                 transaction.status === 'PAID'
                                   ? 'bg-green-600 hover:bg-green-700'
-                                  : 'bg-orange-600 hover:bg-orange-700'
+                                  : 'bg-orange-600 hover:bg-orange-700 text-white'
                               }
                             >
                               {transaction.status}
                             </Badge>
                           </TableCell>
-                          <TableCell className="text-gray-300">
-                            {transaction.paidAt}
+                          <TableCell className="">
+                            {transaction.paidAt
+                              ? formateDate(transaction.paidAt)
+                              : '—'}
                           </TableCell>
 
-                          <TableCell>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="bg-blue-600 hover:bg-blue-700 border-blue-600 text-white"
+                          <TableCell className="text-right">
+                            <Link
+                              href={`/users/orders/invoice/${transaction.id}`}
+                              className="bg-blue-600 hover:bg-blue-700 border-blue-600 px-2 py-1 rounded-xl"
                             >
                               View Invoice
-                            </Button>
+                            </Link>
                           </TableCell>
                         </TableRow>
                       ))}

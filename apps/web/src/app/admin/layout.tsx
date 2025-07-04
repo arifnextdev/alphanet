@@ -1,10 +1,8 @@
-import { ThemeProvider } from '@/components/theme-provider';
-import { Toaster } from '@/components/ui/sonner';
+import '@/app/globals.css';
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
-import '@/app/globals.css';
-import { Providers } from '../providers';
 import Header from './_components/sidebar';
+import { Providers } from '../providers';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -27,22 +25,13 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white text-black dark:bg-black dark:text-white transition-colors duration-300 `}
-      >
-        <Providers>
-          <ThemeProvider attribute="class" defaultTheme="system">
-            <div className="flex">
-              <Header />
-              <main className="flex-1 p-6 min-h-screen pt-10 overflow-hidden">
-                {children}
-              </main>
-            </div>
-          </ThemeProvider>
-        </Providers>
-        <Toaster />
-      </body>
-    </html>
+    <Providers>
+      <div className="flex">
+        <Header />
+        <main className="flex-1 p-6 min-h-screen pt-10 overflow-hidden">
+          {children}
+        </main>
+      </div>
+    </Providers>
   );
 }
