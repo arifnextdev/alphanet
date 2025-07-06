@@ -6,7 +6,7 @@ import { AppService } from './app.service';
 import { AuthController } from './auth/auth.controller';
 import { AuthModule } from './auth/auth.module';
 import { AuthService } from './auth/auth.service';
-import { BikashModule } from './bikash/bikash.module';
+import { BikashModule } from './bkash/bikash.module';
 import { CupponModule } from './cuppon/cuppon.module';
 import { JobsModule } from './jobs/jobs.module';
 import { OrderReminderService } from './jobs/order-reminder/order-reminder.service';
@@ -31,9 +31,18 @@ import { UserService } from './user/user.service';
 import { ConfigModule } from './config/config.module';
 import { JwtService } from '@nestjs/jwt';
 
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
+
 @Module({
   imports: [
     ConfigModule,
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,
+        limit: 10,
+      },
+    ]),
     BullModule.forRoot({
       connection: {
         host: 'localhost',
@@ -71,7 +80,11 @@ import { JwtService } from '@nestjs/jwt';
     PrismaService,
     OrderReminderService,
     MailService,
-    JwtService
+    JwtService,
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
   ],
 })
 export class AppModule {}

@@ -31,7 +31,10 @@ export default function OAuthCallback() {
     if (isSuccess && user) {
       console.log('encodedUser', user);
       dispatch(setAuth({ token, user }));
-      router.push('/admin/dashboard');
+
+      router.push(
+        user.roles.includes('admin') ? '/admin/dashboard' : `/users/${user.id}`,
+      );
       toast.success('Logged in successfully');
     } else if (isError) {
       router.push('/auth/login');

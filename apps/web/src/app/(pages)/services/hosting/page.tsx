@@ -7,6 +7,7 @@ import { useGetProductsQuery } from '@/lib/services/productsApi';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+
 import { useState } from 'react';
 
 export default function HostingServicePage() {
@@ -38,7 +39,6 @@ export default function HostingServicePage() {
     },
   ];
 
-  
   return (
     <div className="">
       <Hero>
@@ -223,17 +223,18 @@ export default function HostingServicePage() {
                     ))}
                   </div>
 
-                  {/* Button */}
-                  <Button
-                    className={`w-full ${
-                      isPopular
-                        ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                        : ''
-                    }`}
-                    variant={isPopular ? 'default' : 'outline'}
-                  >
-                    Get Started
-                  </Button>
+                  <Link href={`/services/checkout/${plan.id}`}>
+                    <Button
+                      className={`w-full ${
+                        isPopular
+                          ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                          : ''
+                      }`}
+                      variant={isPopular ? 'default' : 'outline'}
+                    >
+                      Get Started
+                    </Button>
+                  </Link>
                 </div>
               );
             })

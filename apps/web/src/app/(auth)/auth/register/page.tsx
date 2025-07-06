@@ -45,8 +45,12 @@ export default function RegisterPage() {
       await register(form).unwrap();
       toast.success('Account created successfully');
       router.push('/auth/login');
-    } catch (err: any) {
-      toast.error(err?.data?.message || 'Registration failed');
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        toast.error(err.message);
+      } else {
+        toast.error('An unknown error occurred');
+      }
     }
   };
 

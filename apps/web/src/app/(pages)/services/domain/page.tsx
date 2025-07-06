@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
+import { toast } from 'sonner';
 
 export default function DomainServicePage() {
   const [domain, setDomain] = useState('');
@@ -18,24 +19,28 @@ export default function DomainServicePage() {
     setIsLoading(true);
     setIsAvailable(null);
 
-    try {
-      const response = await fetch(
-        `https://domain-availability.whoisxmlapi.com/api/v1?apiKey=${process.env.NEXT_PUBLIC_RAPID_API_KEY}&domainName=${domain}&outputFormat=JSON`,
-      );
+    toast.promise(
+      fetch(`/api/domain/check?name=${domain}`).then(async (res) => {
+        if (!res.ok) {
+          throw new Error('Failed to check domain');
+        }
+        const data = await res.json();
+        if (data.DomainInfo.domainAvailability === 'AVAILABLE') {
+          setIsAvailable(true);
+          return 'Domain is available!';
+        } else {
+          setIsAvailable(false);
+          throw new Error('Domain is not available');
+        }
+      }),
+      {
+        loading: 'Checking domain...',
+        success: (message) => message,
+        error: (err) => err.message,
+      },
+    );
 
-      const data = await response.json();
-
-      if (data.status === 'available') {
-        setIsAvailable(true);
-      } else {
-        setIsAvailable(false);
-      }
-    } catch (error) {
-      console.error('Error checking domain:', error);
-      setIsAvailable(false); // or show a toast
-    } finally {
-      setIsLoading(false);
-    }
+    setIsLoading(false);
   };
 
   const pricing = [
@@ -82,13 +87,18 @@ export default function DomainServicePage() {
 
           {/* Availability Message */}
           {isAvailable !== null && (
-            <p className="mt-4 text-lg font-semibold z-10">
+            <div className="mt-4 text-lg font-semibold z-10">
               {isAvailable ? (
-                <span className="text-green-500">🎉 Domain is available!</span>
+                <div className="flex items-center gap-4">
+                  <span className="text-green-500">🎉 Domain is available!</span>
+                  <Link href={`/services/checkout?domain=${domain}`}>
+                    <Button>Buy Now</Button>
+                  </Link>
+                </div>
               ) : (
                 <span className="text-red-500">❌ Domain is taken.</span>
               )}
-            </p>
+            </div>
           )}
 
           {/* CTA Buttons */}

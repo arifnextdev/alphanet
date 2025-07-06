@@ -35,21 +35,12 @@ import Link from 'next/link';
 
 export default function OrderDetailsPage() {
   const { id } = useParams();
-  const [order, setOrder] = useState<any>(null);
-
-  const { data, isLoading: loading } = useGetOrderByIdQuery(id as string);
-
-  useEffect(() => {
-    if (data) {
-      setOrder(data);
-    }
-  }, [data]);
+  const { data: order, isLoading: loading } = useGetOrderByIdQuery(id as string);
 
   if (loading) return <p>Loading...</p>;
-  if (!data) return <p>Order not found.</p>;
+  if (!order) return <p>Order not found.</p>;
 
-  const { domainName, amount, paidAt, expiresAt, status, product, payments } =
-    order ?? data;
+  const { domainName, amount, paidAt, expiresAt, status, product, payments } = order;
 
   return (
     <div className="space-y-6">
@@ -127,7 +118,7 @@ export default function OrderDetailsPage() {
             </TableHeader>
             <TableBody>
               {payments.length > 0 ? (
-                payments.map((payment: any) => (
+                payments.map((payment: Payment) => (
                   <TableRow key={payment.id}>
                     <TableCell>{payment.id.slice(0, 6)}...</TableCell>
                     <TableCell>{payment.method || '—'}</TableCell>

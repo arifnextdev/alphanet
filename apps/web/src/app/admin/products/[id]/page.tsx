@@ -19,13 +19,7 @@ import { useEffect, useState } from 'react';
 
 export default function ProductOrderHistoryPage() {
   const { id } = useParams();
-  const [product, setProduct] = useState<any>(null);
-
-  const { data, isLoading } = useGetProductByIdQuery(id as string);
-
-  useEffect(() => {
-    if (data) setProduct(data);
-  }, [data]);
+  const { data: product, isLoading } = useGetProductByIdQuery(id as string);
 
   if (isLoading) return <p>Loading...</p>;
   if (!product) return <p>Product not found.</p>;
@@ -81,7 +75,7 @@ export default function ProductOrderHistoryPage() {
             </TableHeader>
             <TableBody>
               {orders?.length > 0 ? (
-                orders.map((order: any) => (
+                orders.map((order: Order) => (
                   <TableRow key={order.id}>
                     <TableCell>{order.id.slice(0, 6)}...</TableCell>
                     <TableCell>{order.domainName}</TableCell>

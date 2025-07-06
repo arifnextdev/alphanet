@@ -194,15 +194,9 @@ const Header = () => {
                     <Link href={`/users/${authUser.id}`}>Profile</Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator className="" />
-                  <DropdownMenuItem className="">Logout</DropdownMenuItem>
+                  <DropdownMenuItem className="" onClick={handleLogout}>Logout</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-              <Link
-                href="/auth/logout"
-                className="block text-foreground hover:text-primary"
-              >
-                Logout
-              </Link>
             </>
           ) : (
             <Link

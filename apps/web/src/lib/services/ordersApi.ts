@@ -96,6 +96,7 @@ export interface CreateOrderPayload {
   email?: string;
   password?: string;
   metadata?: string;
+  paymentMethod: string;
 }
 
 interface IPagination {
@@ -168,6 +169,21 @@ export const ordersApi = createApi({
       }),
       providesTags: ['Orders'],
     }),
+    deleteOrder: builder.mutation<void, string>({
+      query: (id) => ({
+        url: `Orders/${id}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Orders'],
+    }),
+    updateOrderStatus: builder.mutation<void, { id: string; status: string }>({
+      query: ({ id, status }) => ({
+        url: `Orders/${id}/status`,
+        method: 'PUT',
+        body: status,
+      }),
+      invalidatesTags: ['Orders'],
+    }),
   }),
 });
 
@@ -176,4 +192,6 @@ export const {
   useCreateOrderMutation,
   useGetOrderByIdQuery,
   useGetFilterTransectionQuery,
+  useDeleteOrderMutation,
+  useUpdateOrderStatusMutation,
 } = ordersApi;

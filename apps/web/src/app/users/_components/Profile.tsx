@@ -173,8 +173,6 @@ const customerProfile = {
 export default function CustomerProfile({ id }: { id: string }) {
   const [activeTab, setActiveTab] = useState('orders');
   const [isEditing, setIsEditing] = useState(false);
-  const [orders, setOrders] = useState<Order[]>([]); // Placeholder for orders data
-  const [transactions, setTransactions] = useState<Payment[]>([]); // Placeholder for transactions data
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -187,6 +185,24 @@ export default function CustomerProfile({ id }: { id: string }) {
   });
 
   const authuser = useSelector((state: RootState) => state.auth.user);
+  const { data, isLoading, isError } = useGetUserByIdQuery(id as string);
+  const [updateUser, { isLoading: isUpdating }] = useUpdateUserMutation();
+
+  useEffect(() => {
+    if (data) {
+      setFormData({
+        name: data.name || '',
+        email: data.email || '',
+        phone: data.phone || '',
+        street: data.userInfo?.street || '',
+        city: data.userInfo?.city || '',
+        state: data.userInfo?.state || '',
+        country: data.userInfo?.country || '',
+        postalCode: data.userInfo?.postalCode || '',
+      });
+    }
+  }, [data]);
+
   if (!authuser) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-900 ">
@@ -195,47 +211,14 @@ export default function CustomerProfile({ id }: { id: string }) {
           <p className="text-lg mb-6">
             You must be logged in to view this page.
           </p>
-          <Link href="/login" className="text-blue-500 hover:underline">
+          <Link href="/auth/login" className="text-blue-500 hover:underline">
             Go to Login
           </Link>
         </div>
-        <h1 className="text-2xl font-bold">
-          Please log in to view your profile
-        </h1>
       </div>
     );
   }
 
-  const { data, isLoading } = useGetUserByIdQuery(id as string);
-  const [updateUser, { isLoading: isUpdating, data: updatedUser }] =
-    useUpdateUserMutation();
-
-  useEffect(() => {
-    if (data) {
-      setOrders(data.orders);
-      setTransactions(data.payments);
-      setFormData({
-        name: data.name,
-        email: data.email,
-        phone: data.phone,
-        street: data.userInfo.street,
-        city: data.userInfo.city,
-        state: data.userInfo.state,
-        country: data.userInfo.country,
-        postalCode: data.userInfo.postalCode,
-      });
-    }
-  }, [data]);
-
-  if (!data) {
-    return (
-      <div className="flex items-center justify-center min-h-screen ">
-        <div className="text-center">
-          <h1 className="text-4xl font-bold mb-4">Loading...</h1>
-        </div>
-      </div>
-    );
-  }
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen ">
@@ -246,6 +229,20 @@ export default function CustomerProfile({ id }: { id: string }) {
     );
   }
 
+  if (isError || !data) {
+    return (
+      <div className="flex items-center justify-center min-h-screen ">
+        <div className="text-center">
+          <h1 className="text-4xl font-bold mb-4">Error loading profile.</h1>
+          <p className="text-lg mb-6">Please try again later.</p>
+        </div>
+      </div>
+    );
+  }
+
+  const orders = data.orders || [];
+  const transactions = data.payments || [];
+
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
@@ -254,9 +251,9 @@ export default function CustomerProfile({ id }: { id: string }) {
     console.log('Saving profile data:', formData);
     updateUser({
       id: data.id,
-      data: {
-        name: formData.name,
-        phone: formData.phone,
+      name: formData.name,
+      phone: formData.phone,
+      userInfo: {
         street: formData.street,
         city: formData.city,
         state: formData.state,
@@ -267,14 +264,11 @@ export default function CustomerProfile({ id }: { id: string }) {
       .unwrap()
       .then(() => {
         toast.success('Profile updated successfully');
+        setIsEditing(false);
       })
       .catch((error) => {
         toast.error('Failed to update profile');
         console.error('Error updating profile:', error);
-      })
-      .finally(() => {
-        // Reset form data after successful update
-        setIsEditing(false);
       });
   };
 

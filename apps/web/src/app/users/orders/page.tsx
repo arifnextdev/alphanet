@@ -30,6 +30,30 @@ import { OrderModalForm } from './_components/OrderModalForm';
 import Link from 'next/link';
 import MailModal from './_components/MailModal';
 
+import { toast } from 'sonner';
+import {
+  useDeleteOrderMutation,
+  useUpdateOrderStatusMutation,
+} from '@/lib/services/ordersApi';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { MoreHorizontal } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+
 export default function OrderPage() {
   const [query, setQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
@@ -42,6 +66,25 @@ export default function OrderPage() {
     search: query,
     status: statusFilter !== 'ALL' ? statusFilter : undefined,
   });
+
+  const [deleteOrder] = useDeleteOrderMutation();
+  const [updateOrderStatus] = useUpdateOrderStatusMutation();
+
+  const handleDelete = (id: string) => {
+    toast.promise(deleteOrder(id).unwrap(), {
+      loading: 'Deleting order...',
+      success: 'Order deleted successfully!',
+      error: 'Failed to delete order',
+    });
+  };
+
+  const handleStatusChange = (id: string, status: string) => {
+    toast.promise(updateOrderStatus({ id, status }).unwrap(), {
+      loading: 'Updating order status...',
+      success: 'Order status updated successfully!',
+      error: 'Failed to update order status',
+    });
+  };
 
   const orders = data?.orders || [];
   const pagination = data?.pagination;
@@ -155,6 +198,55 @@ export default function OrderPage() {
                         <EyeIcon className="w-5 h-5" />
                       </Link>
                       <MailModal id={order.userId} />
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" className="h-8 w-8 p-0">
+                            <span className="sr-only">Open menu</span>
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onClick={() =>
+                              handleStatusChange(order.id, 'ACTIVE')
+                            }
+                          >
+                            Activate
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() =>
+                              handleStatusChange(order.id, 'INACTIVE')
+                            }
+                          >
+                            Deactivate
+                          </DropdownMenuItem>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="ghost" className="w-full text-left p-2">
+                                Delete
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>
+                                  Are you sure you want to delete this order?
+                                </AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  This action cannot be undone.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => handleDelete(order.id)}
+                                >
+                                  Delete
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </TableCell>
                   </TableRow>
                 ))}

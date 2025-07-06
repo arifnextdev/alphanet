@@ -39,6 +39,8 @@ model User {
   provider       AuthProvider @default(CREDENTIAL)
   providerId     String?      // for Google/GitHub ID
   refreshToken     String?
+  passwordResetToken     String?
+  passwordResetExpires   DateTime?
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
   loginHistories LoginHistory[]

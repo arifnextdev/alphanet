@@ -9,6 +9,8 @@ import { GoogleStrategy } from './google.strategy';
 
 import { ConfigModule, ConfigService } from '@nestjs/config';
 
+import { MailModule } from '../mail/mail.module';
+
 @Module({
   imports: [
     JwtModule.registerAsync({
@@ -20,6 +22,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
       inject: [ConfigService],
     }),
     PrismaModule,
+    MailModule,
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy, GoogleStrategy],

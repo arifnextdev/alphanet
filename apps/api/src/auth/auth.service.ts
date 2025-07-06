@@ -9,13 +9,16 @@ import { Request } from 'express';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateUserDto } from './dto/user.dto';
 import { UserLoginDto } from './dto/user.login.dto';
-import { randomBytes } from 'crypto';
+import { MailService } from '../mail/mail.service';
+import { randomBytes, createHash } from 'crypto';
+import { ResetPasswordSchema } from './dto/reset-password.dto';
 
 @Injectable()
 export class AuthService {
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
+    private mailService: MailService,
   ) {}
 
   async signUp(dto: CreateUserDto) {
@@ -76,6 +79,8 @@ export class AuthService {
       },
     });
 
+    console.log(user);
+
     if (!user) {
       throw new NotFoundException('User not found');
     }
@@ -119,7 +124,91 @@ export class AuthService {
       },
     });
 
+    console.log('User logged in successfully:', user.email);
+
     return this.generateTokens(user.id, user.email, user.roles, user.status);
+  }
+
+  async forgotPassword(email: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (!user) {
+      // Don't reveal that the user doesn't exist
+      return {
+        message:
+          'If a user with that email exists, a password reset link has been sent.',
+      };
+    }
+
+    const resetToken = randomBytes(32).toString('hex');
+    const passwordResetToken = createHash('sha256')
+      .update(resetToken)
+      .digest('hex');
+
+    const passwordResetExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+    await this.prisma.user.update({
+      where: { email },
+      data: {
+        passwordResetToken,
+        passwordResetExpires,
+      },
+    });
+
+    // In a real app, you'd use a proper URL
+    const resetURL = `http://localhost:3000/auth/reset-password/${resetToken}`;
+
+    try {
+      await this.mailService.sendPasswordResetEmail(user, resetURL);
+      return { message: 'Password reset email sent' };
+    } catch (error) {
+      // In production, you would want to log this error
+      console.error(error);
+      // Reset the fields on failure to prevent a user from being locked out
+      await this.prisma.user.update({
+        where: { email },
+        data: {
+          passwordResetToken: null,
+          passwordResetExpires: null,
+        },
+      });
+      throw new Error('Could not send password reset email.');
+    }
+  }
+
+  async resetPassword(token: string, dto: any) {
+    const parsedata = ResetPasswordSchema.safeParse(dto);
+    if (!parsedata.success) {
+      throw new UnauthorizedException('Invalid password reset data');
+    }
+    const hashedToken = createHash('sha256').update(token).digest('hex');
+
+    const user = await this.prisma.user.findFirst({
+      where: {
+        passwordResetToken: hashedToken,
+        passwordResetExpires: { gt: new Date() },
+      },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('Token is invalid or has expired');
+    }
+
+    const hashedPassword = await bcrypt.hash(parsedata.data.password, 10);
+
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        password: hashedPassword,
+        passwordResetToken: null,
+        passwordResetExpires: null,
+        refreshToken: null, // Also invalidate refresh tokens
+      },
+    });
+
+    return { message: 'Password has been reset successfully.' };
   }
 
   async socialLogin(
@@ -210,8 +299,11 @@ export class AuthService {
   ) {
     const payload = { userId, email, roles, status };
 
+    console.log('Generating tokens for user:', email);
+
     const accessToken = this.jwtService.sign(payload, {
       expiresIn: '15m',
+      secret: process.env.JWT_SECRET || 'default_secret_key',
     });
 
     const refreshToken = randomBytes(64).toString('hex');

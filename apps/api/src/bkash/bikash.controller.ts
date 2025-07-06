@@ -1,5 +1,5 @@
 // bkash.controller.ts
-import { Controller, Get, Query, Res } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, Res } from '@nestjs/common';
 import { BikashService } from './bikash.service';
 import { Response } from 'express';
 
@@ -7,13 +7,13 @@ import { Response } from 'express';
 export class BikashController {
   constructor(private readonly bikashService: BikashService) {}
 
-  // @Post('create')
-  // createPayment(@Body() body: { amount: string; invoice: string }) {
-  //   return this.bikashService.createPayment(
-  //     parseInt(body.amount),
-  //     body.invoice,
-  //   );
-  // }
+  @Post('create')
+  createPayment(@Body() body: { amount: string; invoice: string }) {
+    return this.bikashService.createPayment(
+      parseInt(body.amount),
+      body.invoice,
+    );
+  }
 
   @Get('execute')
   executePayment(

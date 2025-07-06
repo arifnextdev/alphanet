@@ -4,12 +4,11 @@ import Hero from '@/components/sections/Hero';
 import { Button } from '@/components/ui/button';
 import { totalPrice } from '@/lib/calculate';
 import { useGetProductsQuery } from '@/lib/services/productsApi';
+import { RootState } from '@/lib/store';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
-import { OrderDialog } from '../_components/OrderModal';
 import { useSelector } from 'react-redux';
-import { RootState } from '@/lib/store';
 
 export default function VpsServicePage() {
   const { data, isLoading, isError } = useGetProductsQuery({
@@ -132,11 +131,16 @@ export default function VpsServicePage() {
                     ))}
                   </div>
 
-                  <OrderDialog
-                    product={plan}
-                    user={authUser}
-                    isPopular={isPopular}
-                  />
+                  <Link href={`/services/checkout/${plan.id}`}>
+                    <Button
+                      className={`w-full ${
+                        isPopular ? 'bg-blue-600 hover:bg-blue-700 text-white' : ''
+                      }`}
+                      variant={isPopular ? 'default' : 'outline'}
+                    >
+                      Get Started
+                    </Button>
+                  </Link>
                 </div>
               );
             })

@@ -28,6 +28,8 @@ import { IProduct, useGetProductsQuery } from '@/lib/services/productsApi';
 import { set } from 'date-fns';
 import { Textarea } from '@/components/ui/textarea';
 
+import { toast } from 'sonner';
+
 export function OrderModalForm() {
   const [domainName, setDomainName] = useState('');
   const [selectedProductId, setSelectedProductId] = useState<string | null>(
@@ -47,7 +49,7 @@ export function OrderModalForm() {
     if (data?.products) setProducts(data?.products || []);
   });
 
-  const handleOrderAdd = () => {
+  const handleOrderAdd = async () => {
     if (!selectedProductId) return;
 
     const orderData = {
@@ -59,17 +61,11 @@ export function OrderModalForm() {
       userId,
     };
 
-    // console.log(orderData);
-
-    createOrder(orderData);
-    // Reset
-    // setUsername('');
-    // setPassword('');
-    // setUserId('');
-    // setEmail('');
-    // setDomainName('');
-    // setSelectedProductId(null);
-    // setSelectedProduct(null);
+    toast.promise(createOrder(orderData).unwrap(), {
+      loading: 'Creating order...',
+      success: 'Order created successfully!',
+      error: 'Failed to create order',
+    });
   };
 
   return (

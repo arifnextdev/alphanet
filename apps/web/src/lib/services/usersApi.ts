@@ -75,16 +75,17 @@ export interface UserProfile {
 export interface updateUser {
   name?: string;
   phone?: string;
-  street?: string;
-  city?: string;
-  state?: string;
-  zip: string;
-  postalCode?: string;
-  country?: string;
   roles?: string[];
   status?: string;
   avatar?: string | null;
   email?: string;
+  userInfo?: {
+    street?: string;
+    city?: string;
+    state?: string;
+    country?: string;
+    postalCode?: string;
+  };
 }
 
 interface IPagination {

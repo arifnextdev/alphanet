@@ -4,6 +4,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Param,
   Post,
   Req,
   Res,
@@ -18,6 +19,14 @@ import { UserLoginDto, UserLoginSchema } from './dto/user.login.dto';
 
 import { AuthGuard } from '@nestjs/passport';
 import { Request, Response } from 'express';
+import {
+  ForgotPasswordDto,
+  ForgotPasswordSchema,
+} from './dto/forgot-password.dto';
+import {
+  ResetPasswordDto,
+  ResetPasswordSchema,
+} from './dto/reset-password.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -61,6 +70,17 @@ export class AuthController {
   logout(@Res() res: Response) {
     res.clearCookie('refreshToken');
     return res.json({ message: 'Logged out successfully' });
+  }
+
+  @Post('forgot-password')
+  @UsePipes(new ZodValidationPipe(ForgotPasswordSchema))
+  forgotPassword(@Body() dto: ForgotPasswordDto) {
+    return this.authService.forgotPassword(dto.email);
+  }
+
+  @Post('reset-password/:token')
+  resetPassword(@Param('token') token: string, @Body() dto: ResetPasswordDto) {
+    return this.authService.resetPassword(token, dto);
   }
 
   @Get('google')

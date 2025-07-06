@@ -1,35 +1,12 @@
 'use client';
 
-import { useState } from 'react';
-
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { useGetOrdersQuery } from '@/lib/services/ordersApi';
-import { Copy, EyeIcon } from 'lucide-react';
+import { EyeIcon } from 'lucide-react';
 import { OrderModalForm } from './_components/OrderModalForm';
 
 import Link from 'next/link';
 import MailModal from './_components/MailModal';
 import ToggoleStatus from './_components/ToggoleStatus';
+import { IOrder } from '@/lib/services/ordersApi';
 
 export default function OrderPage() {
   const [query, setQuery] = useState('');
@@ -111,7 +88,7 @@ export default function OrderPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {orders.map((order: any) => (
+                {orders.map((order: IOrder) => (
                   <TableRow key={order.id} className="group">
                     <TableCell className="font-medium">{order.id}</TableCell>
                     <TableCell>{order.domainName || '—'}</TableCell>

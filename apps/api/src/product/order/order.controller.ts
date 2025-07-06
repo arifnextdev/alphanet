@@ -34,7 +34,7 @@ export class OrderController {
 
   @Post()
   @UsePipes(new ZodValidationPipe(CreateOrderSchema))
-  createOrder(@Body() data: OrederCreateDto) {
+  createOrder(@Body() data: OrederCreateDto,) {
     return this.orderService.createOrder(data);
   }
 
