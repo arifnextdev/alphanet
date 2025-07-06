@@ -28,8 +28,12 @@ import { UserController } from './user/user.controller';
 import { UserModule } from './user/user.module';
 import { UserService } from './user/user.service';
 
+import { ConfigModule } from './config/config.module';
+import { JwtService } from '@nestjs/jwt';
+
 @Module({
   imports: [
+    ConfigModule,
     BullModule.forRoot({
       connection: {
         host: 'localhost',
@@ -67,6 +71,7 @@ import { UserService } from './user/user.service';
     PrismaService,
     OrderReminderService,
     MailService,
+    JwtService
   ],
 })
 export class AppModule {}

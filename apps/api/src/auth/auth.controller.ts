@@ -2,7 +2,6 @@ import {
   Body,
   Controller,
   Get,
-  Headers,
   HttpCode,
   HttpStatus,
   Post,
@@ -16,12 +15,9 @@ import { ZodValidationPipe } from 'src/product/common/zodValidationPipe';
 import { AuthService } from './auth.service';
 import { CreateUserDto, CreateUserSchema } from './dto/user.dto';
 import { UserLoginDto, UserLoginSchema } from './dto/user.login.dto';
-import { Roles } from '../roles/decorator';
-import { Role } from '../roles/enum';
-import { RoleGuard } from '../roles/guards';
+
 import { AuthGuard } from '@nestjs/passport';
 import { Request, Response } from 'express';
-import { JwtAuthGuard } from './auth.guard';
 
 @Controller('auth')
 export class AuthController {

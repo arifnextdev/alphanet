@@ -1,5 +1,6 @@
 // bkash.service.ts
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
 import { Response } from 'express';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -7,19 +8,39 @@ import { TasksService } from 'src/tasks/tasks.service';
 
 @Injectable()
 export class BikashService {
+  private readonly baseURL: string;
+  private readonly appKey: string;
+  private readonly appSecret: string;
+  private readonly username: string;
+  private readonly password: string;
+  private readonly createUrl: string;
+  private readonly executeUrl: string;
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly taskService: TasksService,
-  ) {}
-  private readonly baseURL = process.env.BKASH_BASE_URL;
-  private readonly appKey = process.env.BKASH_APP_KEY;
-  private readonly appSecret = process.env.BKASH_APP_SECRET;
-  private readonly username = process.env.BKASH_USERNAME;
-  private readonly password = process.env.BKASH_PASSWORD;
-  // Test Sandbox
-  private readonly createUrl = process.env.bkash_create_payment_url;
-  private readonly executeUrl = process.env.bkash_execute_payment_url;
-  private readonly cancelUrl = process.env.bkash_refund_transaction_url;
+    private readonly configService: ConfigService,
+  ) {
+    const baseURL = this.configService.get<string>('BKASH_BASE_URL');
+    const appKey = this.configService.get<string>('BKASH_APP_KEY');
+    const appSecret = this.configService.get<string>('BKASH_APP_SECRET');
+    const username = this.configService.get<string>('BKASH_USERNAME');
+    const password = this.configService.get<string>('BKASH_PASSWORD');
+    const createUrl = this.configService.get<string>('bkash_create_payment_url');
+    const executeUrl = this.configService.get<string>('bkash_execute_payment_url');
+
+    if (!baseURL || !appKey || !appSecret || !username || !password || !createUrl || !executeUrl) {
+      throw new Error('Missing one or more bKash environment variables.');
+    }
+
+    this.baseURL = baseURL;
+    this.appKey = appKey;
+    this.appSecret = appSecret;
+    this.username = username;
+    this.password = password;
+    this.createUrl = createUrl;
+    this.executeUrl = executeUrl;
+  }
 
   private token: string;
 

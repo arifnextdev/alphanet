@@ -81,6 +81,10 @@ export interface updateUser {
   zip: string;
   postalCode?: string;
   country?: string;
+  roles?: string[];
+  status?: string;
+  avatar?: string | null;
+  email?: string;
 }
 
 interface IPagination {

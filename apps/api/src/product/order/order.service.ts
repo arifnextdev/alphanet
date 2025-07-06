@@ -1,14 +1,12 @@
-import { ExtractJwt } from 'passport-jwt';
-import { Geist_Mono } from 'next/font/google';
-import { OrderStatus } from './../../../../web/src/types/type';
+import { ConfigService } from '@nestjs/config';
 import { HttpService } from '@nestjs/axios';
 import {
-  startOfDay,
-  endOfDay,
-  subDays,
-  startOfMonth,
-  endOfMonth,
   addDays,
+  endOfDay,
+  endOfMonth,
+  startOfDay,
+  startOfMonth,
+  subDays,
 } from 'date-fns';
 
 import {
@@ -18,11 +16,11 @@ import {
 } from '@nestjs/common';
 import axios from 'axios';
 import * as https from 'https';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { GetOrderDto, OrederCreateDto } from '../common/dto/order.dto';
-import { MailService } from 'src/mail/mail.service';
 import { BikashService } from 'src/bikash/bikash.service';
+import { MailService } from 'src/mail/mail.service';
+import { PrismaService } from 'src/prisma/prisma.service';
 import { TasksService } from 'src/tasks/tasks.service';
+import { GetOrderDto, OrederCreateDto } from '../common/dto/order.dto';
 import { orderStatusSchema } from '../common/dto/order.status.dto';
 
 export interface CreateCpanelAccountParams {
@@ -46,8 +44,8 @@ export class OrderService {
     private readonly http: HttpService,
     private readonly mail: MailService,
     private readonly bikash: BikashService,
-
     private readonly taskService: TasksService,
+    private readonly configService: ConfigService,
   ) {}
 
   async findAll({ limit = 10, page = 1, search, status }: GetOrderDto) {
@@ -348,70 +346,24 @@ export class OrderService {
   }
 
   async createOrder(data: OrederCreateDto) {
-    const [user, product] = await Promise.all([
-      this.#ValidateUser(data.userId),
-      this.#ValidateProduct(data.productId),
-    ]);
-
-    if (!user || !product) {
-      throw new NotFoundException('User or Product not found');
-    }
-
-    const price = product.price;
-    const discountRate = product.discount || 0;
-    const taxRate = product.tax || 0;
-    const vatRate = product.vat || 0;
-
-    // 1. Calculate discounted amount
-    const discountAmount = (price * discountRate) / 100;
-    const discountedPrice = price - discountAmount;
-
-    // 2. Calculate tax and VAT based on discounted price
-    const taxAmount = (discountedPrice * taxRate) / 100;
-    const vatAmount = (discountedPrice * vatRate) / 100;
-
-    // 3. Final total (subtotal)
-    const total = discountedPrice + taxAmount + vatAmount;
-
-    const order = await this.prisma.order.create({
-      data: {
-        userId: user.id,
-        productId: product.id,
-        amount: product.price,
-        expiresAt: this.calculateExpiryDate(product.billingCycle),
-        status: 'PENDING',
-        payments: {
-          create: {
-            userId: user.id,
-            amount: product.price,
-            vat: vatAmount,
-            tax: taxAmount,
-            discount: discountAmount,
-            subtotal: total,
-          },
-        },
-      },
-      select: {
-        id: true,
-        payments: { select: { id: true, subtotal: true } },
-      },
-    });
-
-    if (!order) {
-      throw new NotFoundException('Order not found');
-    }
-
-    this.taskService.queueEmail(order.id);
-
-    // const bikash = this.bikash.createPayment(
-    //   order.payments[0].subtotal || total,
-    //   order.payments[0].id,
-    // );
-
-    return order;
+    return this._createOrder(data);
   }
 
   async createOrders(data: OrederCreateDto) {
+    const order = await this._createOrder(data, true);
+
+    const bikash = this.bikash.createPayment(
+      order.payments[0].subtotal || order.amount,
+      order.payments[0].id,
+    );
+
+    return {
+      order,
+      bikash,
+    };
+  }
+
+  private async _createOrder(data: OrederCreateDto, withPassword = false) {
     const [user, product] = await Promise.all([
       this.#ValidateUser(data.userId),
       this.#ValidateProduct(data.productId),
@@ -422,31 +374,20 @@ export class OrderService {
     }
 
     const expiresAt = this.calculateExpiryDate(product.billingCycle);
-    const password = this.generateRandomPassword();
-    let plan = 'neyamot_default';
-
-    if (product.grade === 'BASIC') {
-      plan = 'neyamot_base';
-    } else {
-      plan = 'neyamot_default';
-    }
-
-    /// calculate price with discount vat and tax
+    // const password = withPassword ? this.generateRandomPassword() : null;
+    const plan = product.grade === 'BASIC' ? 'neyamot_base' : 'neyamot_default';
 
     const price = product.price;
     const discountRate = product.discount || 0;
     const taxRate = product.tax || 0;
     const vatRate = product.vat || 0;
 
-    // 1. Calculate discounted amount
     const discountAmount = (price * discountRate) / 100;
     const discountedPrice = price - discountAmount;
 
-    // 2. Calculate tax and VAT based on discounted price
     const taxAmount = (discountedPrice * taxRate) / 100;
     const vatAmount = (discountedPrice * vatRate) / 100;
 
-    // 3. Final total (subtotal)
     const total = discountedPrice + taxAmount + vatAmount;
 
     const order = await this.prisma.order.create({
@@ -489,71 +430,9 @@ export class OrderService {
       throw new NotFoundException('Order not created');
     }
 
-    const bikash = this.bikash.createPayment(
-      order.payments[0].subtotal || order.amount,
-      order.payments[0].id,
-    );
+    this.taskService.queueEmail(order.id);
 
-    //Payment
-
-    const html = `
-      <h1>Order Created</h1>
-      <p>Order ID: ${order.id}</p>
-      <p>Product: ${order.status}</p>
-      <p>Amount: ${order.amount}</p>
-      <p>Expiry Date: ${order.expiresAt}</p>
-    `;
-
-    // await this.mail.sendBasicEmail(user.email, 'Order Created', html);
-
-    return {
-      order,
-      bikash,
-    };
-
-    // try {
-    //   const cpanelAccount = await this.createCpanelAccount({
-    //     userName: user.username || 'defaultuser',
-    //     password,
-    //     email: data.email || user.email, // Use user's email
-    //     domain: data.domainName || 'defaultdomain.com',
-    //     plan: plan,
-    //   });
-
-    //   if (!cpanelAccount.success === true) {
-    //     throw new NotFoundException('Cpanel Account not created');
-    //   }
-
-    //   const metadata = {
-    //     userName: user.username,
-    //     password,
-    //     email: data.email,
-    //     domain: data.domainName,
-    //     plan: plan, // From product
-    //   };
-
-    //   await this.prisma.order.update({
-    //     where: { id: order.id },
-    //     data: {
-    //       status: 'PAID',
-    //       metadata: JSON.stringify(metadata),
-    //     },
-    //   });
-
-    //   return {
-    //     order,
-    //     cpanelAccount,
-    //     temporaryPassword: password,
-    //   };
-    // } catch (error) {
-    //   await this.prisma.order.update({
-    //     where: { id: order.id },
-    //     data: {
-    //       status: 'FAILED',
-    //     },
-    //   });
-    //   throw new ConflictException('Order created but cPanel setup failed');
-    // }
+    return order;
   }
 
   async updatedOrderStatus(id: string, status: string) {
@@ -574,7 +453,8 @@ export class OrderService {
   }
 
   //Create Due Payment
-  async createDueInvoice(order: OrederCreateDto) {}
+  async createDueInvoice(_order: OrederCreateDto) { // eslint-disable-line @typescript-eslint/no-unused-vars
+  }
 
   private calculateExpiryDate(billingCycle: string): Date {
     const date = new Date();
@@ -598,9 +478,9 @@ export class OrderService {
     domain,
     plan,
   }: CreateCpanelAccountParams): Promise<CpanelCreateResponse> {
-    const WHM_API_TOKEN = process.env.WHM_API_TOKEN;
-    const WHM_HOST = process.env.WHM_HOST;
-    const WHM_USERNAME = process.env.WHM_USERNAME;
+    const WHM_API_TOKEN = this.configService.get<string>('WHM_API_TOKEN');
+    const WHM_HOST = this.configService.get<string>('WHM_HOST');
+    const WHM_USERNAME = this.configService.get<string>('WHM_USERNAME');
 
     if (!WHM_API_TOKEN || !WHM_HOST || !WHM_USERNAME) {
       throw new Error('WHM credentials are not properly configured.');

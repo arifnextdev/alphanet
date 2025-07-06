@@ -28,22 +28,24 @@ export class OrderReminderService {
       this.logger.log('No orders expiring in 5 days');
       return;
     }
-     
-    //Create Due Invoice
-    for (const order of ordersToRemind) {
-      // await this.orderService.createDueInvoice(order);
-    }
 
-      
-    for (const order of ordersToRemind) {
+    //Create Due Invoice
+    ordersToRemind.forEach((order) => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      // await this.orderService.createDueInvoice(order);
+    });
+
+    ordersToRemind.forEach((order) => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       // await this.mailService.sendInvoiceReminder(order);
-    }
+    });
 
     // Orders expiring today
     const expiringToday = await this.orderService.getOrdersExpiringOn(today);
-    for (const order of expiringToday) {
+    expiringToday.forEach((order) => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       // await this.mailService.sendExpiryNotice(order);
-    }
+    });
 
     this.logger.log('✅ Reminder emails sent');
   }

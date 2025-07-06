@@ -44,7 +44,7 @@ export class OrderController {
   }
 
   @Put(':id/status')
-  updateOrderStatus(@Body() status: string ,@Param('id') id: string ) {
+  updateOrderStatus(@Body() status: string, @Param('id') id: string) {
     return this.orderService.updatedOrderStatus(id, status);
   }
 

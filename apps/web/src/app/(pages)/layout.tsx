@@ -29,19 +29,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white text-black dark:bg-black dark:text-white transition-colors duration-300 `}
-      >
-        <Providers>
-          <ThemeProvider attribute="class" defaultTheme="system">
-            <Header />
-            <main className="w-full ">{children}</main>
-            <Footer />
-          </ThemeProvider>
-        </Providers>
-        <Toaster />
-      </body>
-    </html>
+    <Providers>
+      <ThemeProvider attribute="class" defaultTheme="system">
+        <Header />
+        <main className="w-full ">{children}</main>
+        <Footer />
+      </ThemeProvider>
+    </Providers>
   );
 }

@@ -97,10 +97,22 @@ export class UserService {
             status: true,
             product: { select: { name: true, type: true } },
           },
+          orderBy: { createdAt: 'desc' },
         },
-        payments: true,
-        loginHistories: true,
+        payments: {
+          orderBy: { createdAt: 'desc' },
+          select: {
+            id: true,
+            amount: true,
+            status: true,
+            subtotal: true,
+            paidAt: true,
+            method: true,
+            currency: true,
+        },
       },
+      loginHistories: true,
+    },
     });
     if (!user) {
       throw new NotFoundException('User not found');
