@@ -1,20 +1,8 @@
 'use client';
 
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { useParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import { format } from 'date-fns';
-import { useGetOrderByIdQuery } from '@/lib/services/ordersApi';
-import { EyeIcon, PencilIcon } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -23,24 +11,42 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Transaction, useGetOrderByIdQuery, useTogglePaymentStatusMutation } from '@/lib/services/ordersApi';
+import { format } from 'date-fns';
+import { EyeIcon, PencilIcon } from 'lucide-react';
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
+import { toast } from 'sonner';
+
+const PAYMENT_STATUS_OPTIONS = [
+  'PENDING',
+  'DUE',
+  'SUCCESS',
+  'FAILED',
+  'CANCELLED',
+  'REFUNDED',
+];
 
 export default function OrderDetailsPage() {
   const { id } = useParams();
-  const { data: order, isLoading: loading } = useGetOrderByIdQuery(id as string);
+  const { data: order, isLoading: loading } = useGetOrderByIdQuery(
+    id as string,
+  );
+  const [togglePaymentStatus, { isLoading }] = useTogglePaymentStatusMutation();
 
   if (loading) return <p>Loading...</p>;
   if (!order) return <p>Order not found.</p>;
 
-  const { domainName, amount, paidAt, expiresAt, status, product, payments } = order;
+  const { domainName, amount, paidAt, expiresAt, status, product, payments } =
+    order;
 
   return (
     <div className="space-y-6">
@@ -118,22 +124,40 @@ export default function OrderDetailsPage() {
             </TableHeader>
             <TableBody>
               {payments.length > 0 ? (
-                payments.map((payment: Payment) => (
+                payments.map((payment: Transaction) => (
                   <TableRow key={payment.id}>
                     <TableCell>{payment.id.slice(0, 6)}...</TableCell>
                     <TableCell>{payment.method || '—'}</TableCell>
                     <TableCell>
-                      <Badge
-                        className={
-                          payment.status === 'PAID'
-                            ? 'bg-green-600 text-white'
-                            : payment.status === 'DUE'
-                              ? 'bg-yellow-600'
-                              : 'bg-secondary-foreground'
-                        }
-                      >
-                        {payment.status}
-                      </Badge>
+                      {payment.status === 'PENDING' && (
+                        <Badge className="bg-yellow-600 text-white">
+                          Pending
+                        </Badge>
+                      )}
+                      {payment.status === 'DUE' && (
+                        <Badge className="bg-orange-500 text-white">Due</Badge>
+                      )}
+                      {payment.status === 'SUCCESS' && (
+                        <Badge className="bg-green-600 text-white">
+                          Success
+                        </Badge>
+                      )}
+                      {payment.status === 'FAILED' && (
+                        <Badge variant="destructive">Failed</Badge>
+                      )}
+                      {payment.status === 'CANCELLED' && (
+                        <Badge className="bg-red-500 text-white">
+                          Cancelled
+                        </Badge>
+                      )}
+                      {payment.status === 'REFUNDED' && (
+                        <Badge className="bg-indigo-600 text-white">
+                          Refunded
+                        </Badge>
+                      )}
+                      {!PAYMENT_STATUS_OPTIONS.includes(payment.status) && (
+                        <Badge variant="outline">{payment.status}</Badge>
+                      )}
                     </TableCell>
                     <TableCell>${payment.amount}</TableCell>
                     <TableCell>${payment.discount}</TableCell>
@@ -152,27 +176,47 @@ export default function OrderDetailsPage() {
                         </Link>
                         <Dialog>
                           <DialogTrigger asChild>
-                            <Button variant="outline" size="icon">
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              disabled={isLoading}
+                            >
                               <PencilIcon className="w-4 h-4" />
                             </Button>
                           </DialogTrigger>
                           <DialogContent className="sm:max-w-lg">
                             <DialogHeader>
-                              <DialogTitle>Update Payment</DialogTitle>
+                              <DialogTitle>Update Payment Status</DialogTitle>
                             </DialogHeader>
-                            <DialogDescription>
-                              <Select defaultValue={payment.status}>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select payment status" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="PAID">PAID</SelectItem>
-                                  <SelectItem value="DUE">DUE</SelectItem>
-                                  <SelectItem value="CANCELLED">
-                                    CANCELLED
-                                  </SelectItem>
-                                </SelectContent>
-                              </Select>
+                            <DialogDescription className="flex flex-wrap gap-2 mt-2">
+                              
+                                {PAYMENT_STATUS_OPTIONS.map((option) => (
+                                  <Button
+                                    key={option}
+                                    variant={
+                                      option === payment.status
+                                        ? 'default'
+                                        : 'outline'
+                                    }
+                                    disabled={isLoading || option === payment.status}
+                                    onClick={async () => {
+                                      try {
+                                        await togglePaymentStatus({
+                                          id: payment.id,
+                                          status: option,
+                                        }).unwrap();
+                                        toast.success(
+                                          `Payment status updated to ${option}`,
+                                        );
+                                      } catch (error) {
+                                        toast.error('Failed to update payment status');
+                                      }
+                                    }}
+                                  >
+                                    {option}
+                                  </Button>
+                                ))}
+                            
                             </DialogDescription>
                           </DialogContent>
                         </Dialog>

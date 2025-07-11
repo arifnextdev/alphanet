@@ -1,6 +1,14 @@
 'use client';
 
-import { Camera, Eye, LoaderIcon, Save, Search } from 'lucide-react';
+import {
+  Camera,
+  Eye,
+  LoaderIcon,
+  Save,
+  Search,
+  ChevronLeft,
+  ChevronRight,
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -43,132 +51,6 @@ import { useSelector } from 'react-redux';
 import { formateDate } from '@/lib/utils';
 import { toast } from 'sonner';
 
-// Static data - replace with API calls
-const customerProfile = {
-  id: 'cust_123456789',
-  name: 'Md Ariful Islam',
-  email: 'ariful@example.com',
-  phone: '+880 1712-345678',
-  avatar: '/placeholder.svg?height=100&width=100',
-  joinDate: 'January 15, 2023',
-  lastLogin: '2 hours ago',
-  accountStatus: 'Active',
-  emailVerified: true,
-  phoneVerified: false,
-  address: {
-    street: '123 Main Street',
-    city: 'Dhaka',
-    state: 'Dhaka Division',
-    country: 'Bangladesh',
-    postalCode: '1000',
-  },
-};
-
-// const orders = [
-//   {
-//     id: 'e410ccdf-669b-4aff-9375-d027f2417b7b',
-//     product: 'Linux Server VPS',
-//     amount: '$150.00',
-//     status: 'Pending',
-//     date: '7/20/2025',
-//     expiresAt: '7/20/2026',
-//   },
-//   {
-//     id: '1307059d-d74f-4c01-8482-adf533345dae',
-//     product: 'Windows Server VPS',
-//     amount: '$150.00',
-//     status: 'Pending',
-//     date: '7/20/2025',
-//     expiresAt: '7/20/2026',
-//   },
-//   {
-//     id: 'e40bf3c5-6415-490a-867e-a0adab02d301',
-//     product: 'Linux Server VPS',
-//     amount: '$120.00',
-//     status: 'Completed',
-//     date: '7/15/2025',
-//     expiresAt: '7/15/2026',
-//   },
-//   {
-//     id: '4b9a4502-d79a-44dc-8de8-c22e4078f92f',
-//     product: '2GB ASP.NET Hosting',
-//     amount: '$25.00',
-//     status: 'Completed',
-//     date: '7/10/2025',
-//     expiresAt: '7/10/2026',
-//   },
-//   {
-//     id: '566ba8d7-3cae-4d1f-b7da-d8bb404d2a4a',
-//     product: 'Windows Server Pro',
-//     amount: '$200.00',
-//     status: 'Cancelled',
-//     date: '7/05/2025',
-//     expiresAt: '—',
-//   },
-// ];
-
-// const transactions = [
-//   {
-//     id: 1,
-//     product: 'Windows Server',
-//     method: 'CUSTOM',
-//     amount: '$150.00',
-//     subTotal: '$132.00',
-//     status: 'DUE',
-//     date: 'June 20th, 2025',
-//     billingCycle: 'MONTHLY',
-//     expiresAt: 'July 20th, 2025',
-//     invoiceId: 'INV-2025-001',
-//   },
-//   {
-//     id: 2,
-//     product: 'Linux Server',
-//     method: 'CUSTOM',
-//     amount: '$120.00',
-//     subTotal: '$108.00',
-//     status: 'PAID',
-//     date: 'June 20th, 2025',
-//     billingCycle: 'MONTHLY',
-//     expiresAt: 'July 20th, 2025',
-//     invoiceId: 'INV-2025-002',
-//   },
-//   {
-//     id: 3,
-//     product: 'Windows Server',
-//     method: 'CUSTOM',
-//     amount: '$500.00',
-//     subTotal: '$495.00',
-//     status: 'DUE',
-//     date: 'June 20th, 2025',
-//     billingCycle: 'MONTHLY',
-//     expiresAt: 'July 20th, 2025',
-//     invoiceId: 'INV-2025-003',
-//   },
-//   {
-//     id: 4,
-//     product: '2GB ASP.NET Hosting',
-//     method: 'CUSTOM',
-//     amount: '$25.00',
-//     subTotal: '$23.00',
-//     status: 'PAID',
-//     date: 'May 15th, 2025',
-//     billingCycle: 'MONTHLY',
-//     expiresAt: 'June 15th, 2025',
-//     invoiceId: 'INV-2025-004',
-//   },
-//   {
-//     id: 5,
-//     product: 'Linux Server',
-//     method: 'CUSTOM',
-//     amount: '$120.00',
-//     subTotal: '$108.00',
-//     status: 'PAID',
-//     date: 'May 20th, 2025',
-//     billingCycle: 'MONTHLY',
-//     expiresAt: 'June 20th, 2025',
-//     invoiceId: 'INV-2025-005',
-//   },
-// ];
 
 export default function CustomerProfile({ id }: { id: string }) {
   const [activeTab, setActiveTab] = useState('orders');
@@ -183,9 +65,18 @@ export default function CustomerProfile({ id }: { id: string }) {
     country: '',
     postalCode: '',
   });
+  const [orderPage, setOrderPage] = useState(1);
+  const [paymentPage, setPaymentPage] = useState(1);
 
   const authuser = useSelector((state: RootState) => state.auth.user);
-  const { data, isLoading, isError } = useGetUserByIdQuery(id as string);
+  // Query refetches when page changes
+  const { data, isLoading, isError } = useGetUserByIdQuery({
+    id: id as string,
+    orderPage,
+    orderLimit: 10,
+    paymentPage,
+    paymentLimit: 10,
+  });
   const [updateUser, { isLoading: isUpdating }] = useUpdateUserMutation();
 
   useEffect(() => {
@@ -240,8 +131,10 @@ export default function CustomerProfile({ id }: { id: string }) {
     );
   }
 
-  const orders = data.orders || [];
-  const transactions = data.payments || [];
+  const orders = data?.orders || [];
+  const transactions = data?.payments || [];
+  const ordersPagination = data?.ordersPagination;
+  const paymentsPagination = data?.paymentsPagination;
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -251,14 +144,16 @@ export default function CustomerProfile({ id }: { id: string }) {
     console.log('Saving profile data:', formData);
     updateUser({
       id: data.id,
-      name: formData.name,
-      phone: formData.phone,
-      userInfo: {
-        street: formData.street,
-        city: formData.city,
-        state: formData.state,
-        country: formData.country,
-        postalCode: formData.postalCode,
+      data: {
+        name: formData.name,
+        phone: formData.phone,
+        userInfo: {
+          street: formData.street,
+          city: formData.city,
+          state: formData.state,
+          country: formData.country,
+          postalCode: formData.postalCode,
+        },
       },
     })
       .unwrap()
@@ -272,6 +167,10 @@ export default function CustomerProfile({ id }: { id: string }) {
       });
   };
 
+  const handlePageChange = (page: number) => {
+    setOrderPage(page);
+    setPaymentPage(page);
+  };
   return (
     <div className="min-h-screen ">
       <div className=" mx-auto px-4 py-6 max-w-6xl lg:max-w-[80vw]">
@@ -327,7 +226,11 @@ export default function CustomerProfile({ id }: { id: string }) {
                           onClick={handleSave}
                           className="bg-blue-600 hover:bg-blue-700"
                         >
-                          {isUpdating ? <LoaderIcon className='h-4 w-4 animate-spin'/> : <Save className="h-4 w-4 mr-2" />}
+                          {isUpdating ? (
+                            <LoaderIcon className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Save className="h-4 w-4 mr-2" />
+                          )}
                           Save Changes
                         </Button>
                       </>
@@ -471,15 +374,22 @@ export default function CustomerProfile({ id }: { id: string }) {
                     <Label htmlFor="country" className="">
                       Country
                     </Label>
-                    <Select>
+                    <Select
+                      value={formData.country}
+                      onValueChange={(value) =>
+                        handleInputChange('country', value)
+                      }
+                    >
                       <SelectTrigger className="">
-                        <SelectValue placeholder={formData.country} />
+                        <SelectValue
+                          placeholder={formData.country || 'Select Country'}
+                        />
                       </SelectTrigger>
                       <SelectContent className="">
-                        <SelectItem value="bangladesh">Bangladesh</SelectItem>
-                        <SelectItem value="india">India</SelectItem>
-                        <SelectItem value="pakistan">Pakistan</SelectItem>
-                        <SelectItem value="usa">United States</SelectItem>
+                        <SelectItem value="Bangladesh">Bangladesh</SelectItem>
+                        <SelectItem value="India">India</SelectItem>
+                        <SelectItem value="Pakistan">Pakistan</SelectItem>
+                        <SelectItem value="USA">United States</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -546,9 +456,12 @@ export default function CustomerProfile({ id }: { id: string }) {
                     </TableHeader>
                     <TableBody>
                       {orders.map((order, i) => (
-                        <TableRow key={order.id} className="py-5">
-                          <TableCell className="font-mono text-sm ">
-                            {i + 1}
+                        <TableRow key={order.id}>
+                          <TableCell>
+                            {ordersPagination.perPage *
+                              (ordersPagination.currentPage - 1) +
+                              i +
+                              1}
                           </TableCell>
                           <TableCell className="font-mono text-sm ">
                             {order.product.name.substring(0, 20)}{' '}
@@ -596,6 +509,38 @@ export default function CustomerProfile({ id }: { id: string }) {
                     </TableBody>
                   </Table>
                 </div>
+                {/* Pagination Controls */}
+                {ordersPagination && (
+                  <div className="flex justify-between items-center mt-4">
+                    <span className="text-sm text-muted-foreground">
+                      Page {ordersPagination.currentPage} of{' '}
+                      {ordersPagination.totalPages}
+                    </span>
+                    <div className="space-x-2">
+                      <Button
+                        variant="outline"
+                        disabled={ordersPagination.currentPage <= 1}
+                        onClick={() =>
+                          setOrderPage((prev) => Math.max(prev - 1, 1))
+                        }
+                      >
+                        <ChevronLeft className="w-4 h-4" /> Previous
+                      </Button>
+                      <Button
+                        variant="default"
+                        disabled={
+                          ordersPagination.currentPage >=
+                          ordersPagination.totalPages
+                        }
+                        onClick={() =>
+                          setOrderPage(ordersPagination.currentPage + 1)
+                        }
+                      >
+                        Next <ChevronRight className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -695,6 +640,43 @@ export default function CustomerProfile({ id }: { id: string }) {
                     </TableBody>
                   </Table>
                 </div>
+                {/* Pagination Controls */}
+                {paymentsPagination && (
+                  <div className="flex justify-between items-center mt-4">
+                    <span className="text-sm text-muted-foreground">
+                      Page {paymentsPagination.currentPage} of{' '}
+                      {paymentsPagination.totalPages}
+                    </span>
+                    <div className="space-x-2">
+                      <Button
+                        variant="outline"
+                        disabled={paymentsPagination.currentPage <= 1}
+                        onClick={() =>
+                          setPaymentPage((prev) => Math.max(prev - 1, 1))
+                        }
+                      >
+                        <ChevronLeft className="w-4 h-4" /> Previous
+                      </Button>
+                      <Button
+                        variant="default"
+                        disabled={
+                          paymentsPagination.currentPage >=
+                          paymentsPagination.totalPages
+                        }
+                        onClick={() =>
+                          setPaymentPage((prev) =>
+                            paymentsPagination.currentPage <
+                            paymentsPagination.totalPages
+                              ? prev + 1
+                              : prev,
+                          )
+                        }
+                      >
+                        Next <ChevronRight className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>

@@ -1,4 +1,3 @@
-import { Phone } from 'lucide-react';
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
 interface IGetUsersParams {
@@ -70,6 +69,18 @@ export interface UserProfile {
   payments: Payment[];
   loginHistories: any[];
   userInfo: userinfo;
+  paymentsPagination: {
+    currentPage: number;
+    perPage: number;
+    totalPayments: number;
+    totalPages: number;
+  };
+  ordersPagination: {
+    currentPage: number;
+    perPage: number;
+    totalOrders: number;
+    totalPages: number;
+}
 }
 
 export interface updateUser {
@@ -86,6 +97,24 @@ export interface updateUser {
     country?: string;
     postalCode?: string;
   };
+}
+
+export interface CreateUser {
+  name: string;
+  email: string;
+  phone: string;
+  password: string;
+  roles: string[];
+  status?: string;
+  street?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  postalCode?: string;
+}
+
+export interface ResetPasswordDto {
+  password: string;
 }
 
 interface IPagination {
@@ -120,10 +149,30 @@ export const usersApi = createApi({
       }),
       providesTags: ['Users'],
     }),
-    getUserById: builder.query<UserProfile, string>({
-      query: (id) => ({
+    getUserById: builder.query<UserProfile, {
+      id: string;
+      orderPage?: number;
+      orderLimit?: number;
+      paymentPage?: number;
+      paymentLimit?: number;
+    }>({
+      query: ({ id, orderPage = 1, orderLimit = 10, paymentPage = 1, paymentLimit = 10 }) => ({
         url: `users/${id}`,
+        params: {
+          orderPage,
+          orderLimit,
+          paymentPage,
+          paymentLimit,
+        },
       }),
+    }),
+    createUser: builder.mutation<IUser, CreateUser>({
+      query: (data) => ({
+        url: 'users',
+        method: 'POST',
+        body: data,
+      }),
+      invalidatesTags: ['Users'],
     }),
     updateUser: builder.mutation<
       IUser,
@@ -132,6 +181,33 @@ export const usersApi = createApi({
       query: ({ id, data }) => ({
         url: `users/${id}`,
         method: 'PUT',
+        body: data,
+      }),
+      invalidatesTags: ['Users'],
+    }),
+    toggleUserStatus: builder.mutation<IUser, { id: string; status: string }>({
+      query: ({ id, status }) => ({
+        url: `users/${id}/status`,
+        method: 'PATCH',
+        body: { status },
+      }),
+      invalidatesTags: ['Users'],
+    }),
+    changeUserRole: builder.mutation<IUser, { id: string; roles: string[] }>({
+      query: ({ id, roles }) => ({
+        url: `users/${id}/roles`,
+        method: 'PATCH',
+        body: { roles },
+      }),
+      invalidatesTags: ['Users'],
+    }),
+    resetPassword: builder.mutation<
+      IUser,
+      { id: string; data: ResetPasswordDto }
+    >({
+      query: ({ id, data }) => ({
+        url: `users/${id}/reset-password`,
+        method: 'PATCH',
         body: data,
       }),
       invalidatesTags: ['Users'],
@@ -149,6 +225,10 @@ export const usersApi = createApi({
 export const {
   useGetUsersQuery,
   useGetUserByIdQuery,
+  useCreateUserMutation,
   useUpdateUserMutation,
+  useToggleUserStatusMutation,
+  useChangeUserRoleMutation,
+  useResetPasswordMutation,
   useDeleteUserMutation,
 } = usersApi;

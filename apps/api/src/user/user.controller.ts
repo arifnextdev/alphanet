@@ -4,9 +4,11 @@ import {
   Delete,
   Get,
   Param,
+  Patch,
   Put,
   Query,
 } from '@nestjs/common';
+import { ResetPasswordDto } from 'src/auth/dto/reset-password.dto';
 import { UpdateUserDto } from 'src/auth/dto/user.dto';
 import { UserService } from './user.service';
 
@@ -14,8 +16,6 @@ import { UserService } from './user.service';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  // @UseGuards(AuthGuard, RoleGuard)
-  // @Roles(Role.CUSTOMER)
   @Get()
   getAllUser(
     @Query('page') page?: number,
@@ -41,6 +41,21 @@ export class UserController {
   @Put(':id')
   updateUser(@Param('id') id: string, @Body() data: UpdateUserDto) {
     return this.userService.updateUser(id, data);
+  }
+
+  @Patch(':id/status')
+  activateUser(@Param('id') id: string, @Body() data: { status: string }) {
+    return this.userService.toggleUserStatus(id, data.status);
+  }
+
+  @Patch(':id/roles')
+  deactivateUser(@Param('id') id: string, @Body() data: { roles: string[] }) {
+    return this.userService.changeUserRole(id, data.roles);
+  }
+
+  @Patch(':id/reset-password')
+  resetPassword(@Param('id') id: string, @Body() data: ResetPasswordDto) {
+    return this.userService.resetPassword(id, data);
   }
 
   @Delete(':id')

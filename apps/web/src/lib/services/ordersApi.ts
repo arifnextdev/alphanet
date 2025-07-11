@@ -1,4 +1,5 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { IProduct } from './productsApi';
 interface UserInfo {
   id: string;
   name: string;
@@ -85,6 +86,8 @@ export interface IOrder {
   subTotal: number;
   paidAt?: Date | string | undefined; // ISO string (e.g. "2025-05-01T10:00:00Z")
   expiresAt?: Date | string; // ISO string
+  payments: Transaction[];
+  product: IProduct;
   //   createdAt: Date | string; // ISO str
 }
 
@@ -144,7 +147,7 @@ export const ordersApi = createApi({
     }),
     createOrder: builder.mutation<Partial<OrderResponse>, CreateOrderPayload>({
       query: (data) => ({
-        url: 'Orders',
+        url: 'orders',
         method: 'POST',
         body: data,
       }),
@@ -152,15 +155,16 @@ export const ordersApi = createApi({
     }),
     getOrderById: builder.query<IOrder, string>({
       query: (id) => ({
-        url: `Orders/${id}`,
+        url: `orders/${id}`,
       }),
+      providesTags: ['Orders'],
     }),
     getFilterTransection: builder.query<
       FilteredTransactionResponse,
       IFilterParams
     >({
       query: ({ limit = 10, page = 1, ...params }) => ({
-        url: 'Orders/transection/details',
+        url: 'orders/transection/details',
         params: {
           limit,
           page,
@@ -171,19 +175,29 @@ export const ordersApi = createApi({
     }),
     deleteOrder: builder.mutation<void, string>({
       query: (id) => ({
-        url: `Orders/${id}`,
+        url: `orders/${id}`,
         method: 'DELETE',
       }),
       invalidatesTags: ['Orders'],
     }),
-    updateOrderStatus: builder.mutation<void, { id: string; status: string }>({
+    toggleOrderStatus: builder.mutation<void, { id: string; status: string }>({
       query: ({ id, status }) => ({
-        url: `Orders/${id}/status`,
-        method: 'PUT',
-        body: status,
+        url: `orders/${id}/status`,
+        method: 'PATCH',
+        body: { status },
       }),
       invalidatesTags: ['Orders'],
     }),
+    togglePaymentStatus: builder.mutation<void, { id: string; status: string }>(
+      {
+        query: ({ id, status }) => ({
+          url: `payments/${id}/status`,
+          method: 'PATCH',
+          body: { status },
+        }),
+        invalidatesTags: ['Orders'],
+      },
+    ),
   }),
 });
 
@@ -193,5 +207,6 @@ export const {
   useGetOrderByIdQuery,
   useGetFilterTransectionQuery,
   useDeleteOrderMutation,
-  useUpdateOrderStatusMutation,
+  useToggleOrderStatusMutation,
+  useTogglePaymentStatusMutation,
 } = ordersApi;

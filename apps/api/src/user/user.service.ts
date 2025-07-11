@@ -1,7 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { UpdateUserDto } from 'src/auth/dto/user.dto';
+import { UpdateUserDto, CreateUserDto } from 'src/auth/dto/user.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { userUpdateSchema } from './dto/userUpdate.dto';
+import { ResetPasswordDto } from 'src/auth/dto/reset-password.dto';
+import * as bcrypt from 'bcrypt';
+import { Role, UserStatus } from '@prisma/client';
 
 @Injectable()
 export class UserService {
@@ -73,7 +76,65 @@ export class UserService {
   }
 
   // Get a Single User by ID
-  async getUserById(id: string) {
+  // async getUserById(id: string) {
+  //   const user = await this.prisma.user.findUnique({
+  //     where: { id },
+  //     select: {
+  //       id: true,
+  //       name: true,
+  //       email: true,
+  //       phone: true,
+  //       avatar: true,
+  //       roles: true,
+  //       status: true,
+  //       createdAt: true,
+  //       updatedAt: true,
+  //       userInfo: true,
+  //       orders: {
+  //         select: {
+  //           id: true,
+  //           domainName: true,
+  //           amount: true,
+  //           paidAt: true,
+  //           expiresAt: true,
+  //           status: true,
+  //           product: { select: { name: true, type: true } },
+  //         },
+  //         orderBy: { createdAt: 'desc' },
+  //       },
+  //       payments: {
+  //         orderBy: { createdAt: 'desc' },
+  //         select: {
+  //           id: true,
+  //           amount: true,
+  //           status: true,
+  //           subtotal: true,
+  //           paidAt: true,
+  //           method: true,
+  //           currency: true,
+  //         },
+  //       },
+  //       loginHistories: true,
+  //     },
+  //   });
+  //   if (!user) {
+  //     throw new NotFoundException('User not found');
+  //   }
+
+  //   return user;
+  // }
+
+  // Get a Single User by ID with orders & payments pagination
+  async getUserById(
+    id: string,
+    orderPage: number = 1,
+    orderLimit: number = 10,
+    paymentPage: number = 1,
+    paymentLimit: number = 10,
+  ) {
+    const orderSkip = (orderPage - 1) * orderLimit;
+    const paymentSkip = (paymentPage - 1) * paymentLimit;
+
     const user = await this.prisma.user.findUnique({
       where: { id },
       select: {
@@ -98,9 +159,13 @@ export class UserService {
             product: { select: { name: true, type: true } },
           },
           orderBy: { createdAt: 'desc' },
+          skip: orderSkip,
+          take: orderLimit,
         },
         payments: {
           orderBy: { createdAt: 'desc' },
+          skip: paymentSkip,
+          take: paymentLimit,
           select: {
             id: true,
             amount: true,
@@ -109,16 +174,37 @@ export class UserService {
             paidAt: true,
             method: true,
             currency: true,
+          },
         },
+        loginHistories: true,
       },
-      loginHistories: true,
-    },
     });
+
     if (!user) {
       throw new NotFoundException('User not found');
     }
 
-    return user;
+    // Get total counts for pagination
+    const [ordersCount, paymentsCount] = await Promise.all([
+      this.prisma.order.count({ where: { userId: id } }),
+      this.prisma.payment.count({ where: { userId: id } }),
+    ]);
+
+    return {
+      ...user,
+      ordersPagination: {
+        currentPage: orderPage,
+        perPage: orderLimit,
+        totalOrders: ordersCount,
+        totalPages: Math.ceil(ordersCount / orderLimit),
+      },
+      paymentsPagination: {
+        currentPage: paymentPage,
+        perPage: paymentLimit,
+        totalPayments: paymentsCount,
+        totalPages: Math.ceil(paymentsCount / paymentLimit),
+      },
+    };
   }
 
   //Update a User by ID
@@ -132,8 +218,6 @@ export class UserService {
     if (!updateUser) {
       throw new NotFoundException('User not found');
     }
-
-    console.log('Parsed Data:', parsebody.data);
 
     await this.prisma.user.update({
       where: { id },
@@ -172,6 +256,65 @@ export class UserService {
   //Delete a User by ID
   async deleteUser(id: string) {
     return await this.prisma.user.delete({ where: { id } });
+  }
+
+  // Activate a user
+  async toggleUserStatus(id: string, status: string) {
+    const validStatuses = [
+      'ACTIVE',
+      'INACTIVE',
+      'PENDING',
+      'BANNED',
+      'SUSPENDED',
+    ];
+    if (!validStatuses.includes(status)) {
+      throw new Error('Invalid status');
+    }
+    const exist = await this.prisma.user.findUnique({ where: { id } });
+    if (!exist) {
+      throw new NotFoundException('User not found');
+    }
+    const user = await this.prisma.user.update({
+      where: { id },
+      data: { status: status as UserStatus },
+    });
+    return { message: 'User activated', user };
+  }
+
+  // Change user role
+  async changeUserRole(id: string, roles: string[]) {
+    if (!Array.isArray(roles) || roles.length === 0) {
+      throw new Error('Roles must be a non-empty array');
+    }
+    const validRoles = ['ADMIN', 'CUSTOMER', 'MODERATOR']; // Add more roles as needed
+    for (const role of roles) {
+      if (!validRoles.includes(role)) {
+        throw new Error(`Invalid role: ${role}`);
+      }
+    }
+    // Check if user exists
+    const user = await this.prisma.user.findUnique({ where: { id } });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    const updatedUser = await this.prisma.user.update({
+      where: { id },
+      data: {
+        roles: roles as Role[],
+      },
+    });
+    return { message: 'User role updated', user: updatedUser };
+  }
+  // Deactivate a user
+
+  // Reset user password
+  async resetPassword(id: string, data: ResetPasswordDto) {
+    const hashedPassword = await bcrypt.hash(data.password, 10);
+    const user = await this.prisma.user.update({
+      where: { id },
+      data: { password: hashedPassword },
+    });
+    return { message: 'Password reset successful', user };
   }
 
   //Delete a User by ID

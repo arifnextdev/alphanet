@@ -24,8 +24,6 @@ import { orderStatusSchema } from '../common/dto/order.status.dto';
 import { BikashService } from 'src/bkash/bikash.service';
 import { Response } from 'express';
 
-
-
 @Injectable()
 export class OrderService {
   constructor(
@@ -190,6 +188,17 @@ export class OrderService {
       throw new NotFoundException('Order not created');
     }
 
+    if (data.paymentMethod === 'BIKASH') {
+      const bikash = await this.bikash.createPayment(
+        order.payments[0].subtotal || order.amount,
+        order.payments[0].id,
+      );
+      console.log('Bkash payment created:', bikash);
+      return {
+        redirectURL: bikash.bkashURL,
+      };
+    }
+
     // Conditional cPanel account creation for Hosting products
     if (product.type === 'HOSTING') {
       if (!data.domainName) {
@@ -224,24 +233,12 @@ export class OrderService {
       //   console.error('cPanel account creation failed:', cpanelAccount.message);
       //   // Depending on business logic, you might want to mark the order as failed or pending manual review
       // }
-      return{
-        message:"Order Successfully Done"
-      }
+      return {
+        message: 'Order Successfully Done',
+      };
     }
 
     // Send email notification based on product type
- 
-
-    // if (data.paymentMethod === 'BIKASH') {
-    //   const bikash = await this.bikash.createPayment(
-    //     order.payments[0].subtotal || order.amount,
-    //     order.payments[0].id,
-    //   );
-    //   console.log('Bkash payment created:', bikash);
-    //   return {
-    //     redirectURL: bikash.bkashURL
-    //   };
-    // }
 
     return { order };
   }
@@ -445,6 +442,4 @@ export class OrderService {
     // Implement proper password generation
     return Math.random().toString(36).slice(-10);
   }
-
- 
 }

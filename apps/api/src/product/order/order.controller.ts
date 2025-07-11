@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Param,
+  Patch,
   Post,
   Put,
   Query,
@@ -38,15 +39,17 @@ export class OrderController {
     return this.orderService.createOrder(data);
   }
 
+   @Patch(':id/status')
+  updateOrderStatus(@Body() status: string, @Param('id') id: string) {
+    return this.orderService.updatedOrderStatus(id, status);
+  }
+
   @Put(':id')
   updateOrder(@Param('id') id: string) {
     return this.orderService.updateOrder(id);
   }
 
-  @Put(':id/status')
-  updateOrderStatus(@Body() status: string, @Param('id') id: string) {
-    return this.orderService.updatedOrderStatus(id, status);
-  }
+ 
 
   @Delete(':id')
   deleteOrder(@Param('id') id: string) {

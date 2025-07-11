@@ -1,12 +1,12 @@
 'use client';
 
 import {
-  useDeleteUserMutation,
+  useChangeUserRoleMutation,
   useGetUsersQuery,
+  useToggleUserStatusMutation,
 } from '@/lib/services/usersApi';
 import { useState } from 'react';
 
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -27,24 +27,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { EyeIcon, Loader2, Trash2Icon } from 'lucide-react';
-import { UserUpdateModal } from '../_components/UserModal';
+import { EyeIcon } from 'lucide-react';
 import Link from 'next/link';
-
-const getStatusBadge = (status: string) => {
-  switch (status.toUpperCase()) {
-    case 'ACTIVE':
-      return <Badge className="bg-green-600 text-white">Active</Badge>;
-    case 'PENDING':
-      return <Badge variant="outline">Pending</Badge>;
-    case 'BLOCKED':
-      return <Badge variant="destructive">Blocked</Badge>;
-    case 'INACTIVE':
-      return <Badge className="bg-gray-600">Inactive</Badge>;
-    default:
-      return <Badge>{status}</Badge>;
-  }
-};
 
 export default function AdminUsersPage() {
   const [query, setQuery] = useState('');
@@ -60,11 +44,21 @@ export default function AdminUsersPage() {
     status: statusFilter !== 'ALL' ? statusFilter : undefined,
     role: roleFilter !== 'ALL' ? roleFilter : undefined,
   });
-  const [deleteUser, { isLoading: isDeleting }] = useDeleteUserMutation();
+  const [toggleUserStatus] = useToggleUserStatusMutation();
+  const [changeUserRole] = useChangeUserRoleMutation();
 
   const users = data?.users || [];
   const pagination = data?.pagination;
   const totalPages = pagination?.totalPages || 1;
+
+  // Handler for changing role
+  const handleRoleChange = (userId: string, newRole: string) => {
+    changeUserRole({ id: userId, roles: [newRole] });
+  };
+
+  const handleStatusChange = (userId: string, newStatus: string) => {
+    toggleUserStatus({ id: userId, status: newStatus });
+  };
 
   return (
     <div className="space-y-6">
@@ -96,10 +90,10 @@ export default function AdminUsersPage() {
               <SelectContent>
                 <SelectGroup>
                   <SelectLabel>Status</SelectLabel>
-                  <SelectItem value="ALL">Status</SelectItem>
+                  <SelectItem value="ALL">All</SelectItem>
                   <SelectItem value="ACTIVE">Active</SelectItem>
                   <SelectItem value="INACTIVE">Inactive</SelectItem>
-                  <SelectItem value="BLOCKED">Blocked</SelectItem>
+                  <SelectItem value="BANNED">BANNED</SelectItem>
                   <SelectItem value="PENDING">Pending</SelectItem>
                   <SelectItem value="SUSPENDED">Suspended</SelectItem>
                 </SelectGroup>
@@ -119,9 +113,10 @@ export default function AdminUsersPage() {
               <SelectContent>
                 <SelectGroup>
                   <SelectLabel>Roles</SelectLabel>
-                  <SelectItem value="ALL">Role</SelectItem>
+                  <SelectItem value="ALL">All</SelectItem>
                   <SelectItem value="ADMIN">ADMIN</SelectItem>
                   <SelectItem value="CUSTOMER">CUSTOMER</SelectItem>
+                  <SelectItem value="MODERATOR">MODERATOR</SelectItem>
                 </SelectGroup>
               </SelectContent>
             </Select>
@@ -150,32 +145,53 @@ export default function AdminUsersPage() {
                     <TableCell>{user.name || '—'}</TableCell>
                     <TableCell>{user.email}</TableCell>
                     <TableCell>
-                      {user.roles?.map((role: string) => (
-                        <Badge key={role} variant="outline" className="mr-1">
-                          {role}
-                        </Badge>
-                      ))}
+                      <Select
+                        value={user.roles[0] || ''}
+                        onValueChange={(role) =>
+                          handleRoleChange(user.id, role)
+                        }
+                      >
+                        <SelectTrigger className="w-[120px]">
+                          <SelectValue placeholder="Role" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectGroup>
+                            <SelectItem value="ADMIN">ADMIN</SelectItem>
+                            <SelectItem value="CUSTOMER">CUSTOMER</SelectItem>
+                            <SelectItem value="MODERATOR">MODERATOR</SelectItem>
+                            {/* Add more roles as needed */}
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
                     </TableCell>
                     <TableCell>{user.provider}</TableCell>
-                    <TableCell>{getStatusBadge(user.status)}</TableCell>
+                    <TableCell>
+                      <Select
+                        value={user.status}
+                        onValueChange={(newStatus) =>
+                          handleStatusChange(user.id, newStatus)
+                        }
+                      >
+                        <SelectTrigger className="w-[120px]">
+                          <SelectValue placeholder="Status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectGroup>
+                            <SelectItem value="ACTIVE">Active</SelectItem>
+                            <SelectItem value="INACTIVE">Inactive</SelectItem>
+                            <SelectItem value="BLOCKED">Blocked</SelectItem>
+                            <SelectItem value="PENDING">Pending</SelectItem>
+                            <SelectItem value="SUSPENDED">Suspended</SelectItem>
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
                     <TableCell className="text-right space-x-2 flex items-center justify-end">
-                      <UserUpdateModal user={user} />
-
                       <Link href={`/admin/users/${user.id}`}>
                         <EyeIcon className="w-4 h-4 text-blue-500" />
                       </Link>
 
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="cursor-pointer"
-                        onClick={() => deleteUser(user.id)}
-                      >
-                        {isDeleting ? (
-                          <Loader2 className="animate-spin" />
-                        ) : null}
-                        <Trash2Icon className="w-4 h-4 text-red-500" />
-                      </Button>
+                      {/* Status update dropdown */}
                     </TableCell>
                   </TableRow>
                 ))}

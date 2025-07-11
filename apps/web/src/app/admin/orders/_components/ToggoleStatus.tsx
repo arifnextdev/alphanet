@@ -7,55 +7,63 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import { useToggleOrderStatusMutation } from '@/lib/services/ordersApi';
 import { PencilIcon } from 'lucide-react';
 import { toast } from 'sonner';
+
+const ORDER_STATUS_OPTIONS = [
+  'PENDING',
+  'PAID',
+  'PROCESSING',
+  'COMPLETED',
+  'FAILED',
+  'EXPIRED',
+  'CANCELLED',
+  'REFUNDED',
+];
 
 const ToggoleStatus = ({
   id,
   status,
-  url,
-  options = [],
+  options = ORDER_STATUS_OPTIONS,
 }: {
   id: string;
   status: string;
-  url: string;
-  options: string[];
+  url?: string;
+  options?: string[];
 }) => {
+  const [toggleOrderStatus, { isLoading }] = useToggleOrderStatusMutation();
+
   const handleStatusChange = async (newStatus: string) => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/${url}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ status: newStatus }),
-      });
-
-      if (!res.ok) {
-        throw new Error('Failed to update payment status');
-      }
-      toast.success('Payment status updated!');
+      await toggleOrderStatus({ id, status: newStatus }).unwrap();
+      toast.success(`Order status updated to ${newStatus}`);
     } catch (error) {
-      toast.error('Failed to update payment status');
-      console.error('Error updating payment status:', error);
+      toast.error('Failed to update order status');
     }
   };
+
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="outline" size="icon">
+        <Button variant="outline" size="icon" disabled={isLoading}>
           <PencilIcon className="w-4 h-4" />
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Update Payment</DialogTitle>
+          <DialogTitle>Update Order Status</DialogTitle>
         </DialogHeader>
 
-        <div className="">
-          <div className="">
+        <div>
+          <div className="flex flex-wrap gap-2">
             {options.map((option) => (
-              <Button key={option} onClick={() => handleStatusChange(option)}>
+              <Button
+                key={option}
+                variant={option === status ? 'default' : 'outline'}
+                onClick={() => handleStatusChange(option)}
+                disabled={isLoading || option === status}
+              >
                 {option}
               </Button>
             ))}
