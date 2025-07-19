@@ -54,7 +54,15 @@ export class PaymentService {
 
   async updatePaymentStatus(id: string, status: string) {
     //validate status
-    const validStatuses = ['PENDING', 'COMPLETED', 'FAILED', 'REFUNDED','CANCELLED','DUE','SUCCESS'];
+    const validStatuses = [
+      'PENDING',
+      'COMPLETED',
+      'FAILED',
+      'REFUNDED',
+      'CANCELLED',
+      'DUE',
+      'SUCCESS',
+    ];
     if (!validStatuses.includes(status)) {
       throw new Error('Invalid status');
     }

@@ -1,5 +1,5 @@
-import { ConfigService } from '@nestjs/config';
 import { HttpService } from '@nestjs/axios';
+import { ConfigService } from '@nestjs/config';
 import {
   addDays,
   endOfDay,
@@ -14,15 +14,13 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import axios from 'axios';
-import * as https from 'https';
+import { BikashService } from 'src/bkash/bikash.service';
 import { MailService } from 'src/mail/mail.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { TasksService } from 'src/tasks/tasks.service';
+import { AdminOrderCreateDto } from '../common/dto/admin.order.dto';
 import { GetOrderDto, OrederCreateDto } from '../common/dto/order.dto';
 import { orderStatusSchema } from '../common/dto/order.status.dto';
-import { BikashService } from 'src/bkash/bikash.service';
-import { Response } from 'express';
 
 @Injectable()
 export class OrderService {
@@ -148,6 +146,12 @@ export class OrderService {
 
     const total = discountedPrice + taxAmount + vatAmount;
 
+    const generateUniqueUserName = () => {
+      const randomString = Math.random().toString(36).substring(2, 8);
+      const userName = `${user.username ? user.username : product.type}${randomString}`;
+      return userName;
+    };
+
     const order = await this.prisma.order.create({
       data: {
         userId: user.id,
@@ -155,6 +159,11 @@ export class OrderService {
         domainName: data.domainName || null, // Use provided domainName
         amount: price,
         expiresAt,
+        metadata: {
+          plan,
+          password,
+          userName: generateUniqueUserName(),
+        },
         payments: {
           create: {
             userId: user.id,
@@ -195,7 +204,7 @@ export class OrderService {
       );
       console.log('Bkash payment created:', bikash);
       return {
-        redirectURL: bikash.bkashURL,
+        bkashURL: bikash.bkashURL,
       };
     }
 
@@ -206,6 +215,19 @@ export class OrderService {
           'Domain name is required for Hosting products',
         );
       }
+
+      await this.prisma.order.update({
+        where: { id: order.id },
+        data: {
+          domainName: data.domainName,
+          metadata: {
+            domainName: data.domainName,
+            userName: data.domainName.replace(/\./g, '').slice(0, 8), // Generate username from domain
+            password: password, // Use provided password or generate random
+            plan: plan,
+          },
+        },
+      });
 
       this.taskService.queueCpanel({
         userId: user.id,
@@ -241,6 +263,211 @@ export class OrderService {
     // Send email notification based on product type
 
     return { order };
+  }
+
+  async createOrderAdmin(data: AdminOrderCreateDto) {
+    const product = await this.prisma.product.findUnique({
+      where: { id: data.productId },
+    });
+
+    if (!product) {
+      throw new NotFoundException('Product not found');
+    }
+    const user = await this.prisma.user.findUnique({
+      where: { id: data.userId },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    const expiresAt = this.calculateExpiryDate(product.billingCycle);
+    const password = this.generateRandomPassword();
+    const plan = product.grade === 'BASIC' ? 'neyamot_1GB' : 'neyamot_default';
+
+    const price = product.price;
+    const discountRate = product.discount || 0;
+    const taxRate = product.tax || 0;
+    const vatRate = product.vat || 0;
+
+    const discountAmount = (price * discountRate) / 100;
+    const discountedPrice = price - discountAmount;
+
+    const taxAmount = (discountedPrice * taxRate) / 100;
+    const vatAmount = (discountedPrice * vatRate) / 100;
+
+    const total = discountedPrice + taxAmount + vatAmount;
+
+    let metadata = {};
+
+    if (product.type === 'HOSTING') {
+      metadata = {
+        plan,
+        password,
+        userName: data.userName,
+        domainName: data.domainName,
+      };
+    }
+
+    // switch (product.type) {
+    //   case 'HOSTING':
+    //     metadata = {
+    //       plan,
+    //       password,
+    //       userName: data.userName,
+    //       domainName: data.domainName,
+    //     };
+    //     break;
+
+    //   case 'DOMAIN':
+    //     metadata = {
+    //       domainName: data.domainName,
+    //       registrationPeriod: data.registrationPeriod || 1, // optional
+    //     };
+    //     break;
+
+    //   case 'VPS':
+    //     metadata = {
+    //       rootPassword: this.generateRandomPassword(),
+    //       os: data.os || 'ubuntu',
+    //       hostname: data.domainName,
+    //     };
+    //     break;
+
+    //   case 'EMAIL':
+    //     metadata = {
+    //       emailUser: data.emailUser,
+    //       emailPassword: this.generateRandomPassword(),
+    //       domainName: data.domainName,
+    //     };
+    //     break;
+
+    //   case 'SMS':
+    //     metadata = {
+    //       senderId: data.senderId,
+    //       smsApiKey: data.smsApiKey,
+    //       smsGatewayUrl: data.smsGatewayUrl,
+    //     };
+    //     break;
+
+    //   case 'DEDICATED':
+    //     metadata = {
+    //       ip: data.ip,
+    //       rootPassword: this.generateRandomPassword(),
+    //       location: data.location,
+    //     };
+    //     break;
+
+    //   case 'SSL':
+    //     metadata = {
+    //       domainName: data.domainName,
+    //       certificateType: data.certificateType || 'DV',
+    //       csr: data.csr,
+    //     };
+    //     break;
+
+    //   case 'CLOUD':
+    //     metadata = {
+    //       provider: data.provider,
+    //       apiKey: data.apiKey,
+    //       bucket: data.bucket,
+    //       region: data.region,
+    //     };
+    //     break;
+
+    //   default:
+    //     metadata = {};
+    // }
+
+    // if (product.type === 'HOSTING') {
+    //   metadata = {
+    //     plan,
+    //     password,
+    //     userName: data.userName,
+    //     domainName: data.domainName,
+    //   };
+    // }
+
+    // if (product.type === 'DOMAIN') {
+    //   metadata = {
+    //     plan,
+    //     password,
+    //     userName: data.userName,
+    //     domainName: data.domainName,
+    //   };
+    // }
+
+    // if (product.type === 'VPS') {
+    //   metadata = {};
+    // }
+
+    // if (product.type === 'EMAIL') {
+    //   metadata = {};
+    // }
+
+    // if (product.type === 'SMS') {
+    //   metadata = {};
+    // }
+
+    // if (product.type === 'DEDICATED') {
+    //   metadata = {};
+    // }
+
+    // if (product.type === 'SSL') {
+    //   metadata = {};
+    // }
+
+    // if (product.type === 'CLOUD') {
+    //   metadata = {};
+    // }
+
+    const order = await this.prisma.order.create({
+      data: {
+        userId: data.userId,
+        productId: data.productId,
+        expiresAt,
+        amount: total,
+        status: 'PAID',
+        metadata: JSON.stringify(metadata),
+        payments: {
+          create: {
+            userId: data.userId,
+            amount: product.price,
+            vat: vatAmount,
+            tax: taxAmount,
+            discount: discountedPrice,
+            method: data.paymentMethod,
+            subtotal: total,
+            status: data.paymentStatus,
+          },
+        },
+      },
+    });
+
+    if (!order) {
+      throw new NotFoundException('Order not created');
+    }
+
+    if (product.type === 'HOSTING') {
+      this.taskService.queueCpanel({
+        userId: data.userId,
+        orderId: order.id,
+        userName: data.userName,
+        domain: data.domainName,
+        password,
+        email: user.email,
+        plan,
+      });
+      this.taskService.queueEmail(order.id);
+
+      return {
+        message: 'Order created successfully',
+      };
+    }
+
+    return {
+      message: 'Order created successfully',
+      data: order,
+    };
   }
 
   async getOrdersExpiringOn(date: Date) {
@@ -387,6 +614,17 @@ export class OrderService {
     });
   }
 
+  async updateOrderMetadata(id: string, metadata: any) {
+    console.log(metadata);
+    const order = await this.prisma.order.findUnique({ where: { id } });
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+    return this.prisma.order.update({
+      where: { id },
+      data: { metadata },
+    });
+  }
   async deleteOrder(id: string) {
     const order = await this.prisma.order.findUnique({ where: { id } });
     if (!order) {

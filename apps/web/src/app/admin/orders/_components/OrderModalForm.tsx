@@ -37,7 +37,6 @@ export function OrderModalForm() {
   const [userId, setUserId] = useState('');
   const [productType, setProductType] = useState<string>('HOSTING');
   const [products, setProducts] = useState<IProduct[]>([]);
-  const [email, setEmail] = useState('');
 
   const [createOrder, { isLoading }] = useCreateOrderMutation();
   const { data } = useGetProductsQuery({ type: productType, limit: 10 });
@@ -53,9 +52,9 @@ export function OrderModalForm() {
       domainName,
       productId: selectedProductId,
       username,
-      email,
       password,
       userId,
+      paymentMethod: 'CASH',
     };
 
     toast.promise(createOrder(orderData).unwrap(), {
@@ -147,17 +146,6 @@ export function OrderModalForm() {
               id="username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="col-span-3"
-            />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="price" className="text-right">
-              Email
-            </Label>
-            <Input
-              id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
               className="col-span-3"
             />
           </div>

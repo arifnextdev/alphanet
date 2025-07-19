@@ -32,13 +32,12 @@ export default function ForgotPasswordPage() {
       }
 
       setMessage(data.message);
-    } catch (err: unknown) {
+    } catch (err) {
       if (err instanceof Error) {
         setError(err.message);
       } else {
         setError('An unknown error occurred');
       }
-      setError(err.message);
     } finally {
       setLoading(false);
     }

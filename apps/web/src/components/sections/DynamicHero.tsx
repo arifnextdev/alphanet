@@ -15,7 +15,7 @@ const DynamicHero = () => {
           }}
         />
       </div>
-      <div className="mx-auto max-w-2xl py-32 sm:py-48 lg:py-56">
+      <div className="mx-auto max-w-2xl py-32 sm:py-48 lg:py-28">
         <div className="hidden sm:mb-8 sm:flex sm:justify-center">
           <div className="relative rounded-full px-3 py-1 text-sm/6  ring-1 ring-primary/30 hover:ring-primary/50">
             Announcing our next round of funding.{' '}

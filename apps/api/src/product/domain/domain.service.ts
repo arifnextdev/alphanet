@@ -19,7 +19,9 @@ export class DomainService {
         throw new Error('No response from domain availability API');
       }
       if (response.status !== 200) {
-        throw new Error(`Error fetching domain availability: ${response.statusText}`);
+        throw new Error(
+          `Error fetching domain availability: ${response.statusText}`,
+        );
       }
       if (!response.data || !response.data.domainAvailability) {
         throw new Error('Invalid domain availability response');

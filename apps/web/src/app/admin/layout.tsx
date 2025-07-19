@@ -2,6 +2,7 @@ import '@/app/globals.css';
 import type { Metadata } from 'next';
 import Header from './_components/sidebar';
 import { Providers } from '../providers';
+import AdminLayouts from '@/components/layout/AdminLayout';
 
 export const metadata: Metadata = {
   title: 'Alpha Net',
@@ -15,12 +16,14 @@ export default function AdminLayout({
 }) {
   return (
     <Providers>
-      <div className="flex">
-        <Header />
-        <main className="flex-1 p-6 min-h-screen pt-10 overflow-hidden">
-          {children}
-        </main>
-      </div>
+      <AdminLayouts>
+        <div className="flex">
+          <Header />
+          <main className="flex-1 p-6 min-h-screen pt-10 overflow-hidden">
+            {children}
+          </main>
+        </div>
+      </AdminLayouts>
     </Providers>
   );
 }

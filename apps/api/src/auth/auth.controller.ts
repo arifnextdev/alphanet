@@ -27,6 +27,10 @@ import {
   ResetPasswordDto,
   ResetPasswordSchema,
 } from './dto/reset-password.dto';
+import { RoleGuard } from 'src/roles/guards';
+import { Roles } from 'src/roles/decorator';
+import { Role } from 'src/roles/enum';
+
 
 @Controller('auth')
 export class AuthController {
@@ -45,8 +49,9 @@ export class AuthController {
     return this.authService.signUp(dto);
   }
 
-  @UseGuards(AuthGuard('jwt'))
   @Get('me')
+  @UseGuards(AuthGuard('jwt'))
+ 
   me(@Req() req: Request) {
     return this.authService.me(
       req.user as {

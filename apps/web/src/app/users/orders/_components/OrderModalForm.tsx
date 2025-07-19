@@ -25,8 +25,6 @@ import { Loader2 } from 'lucide-react';
 
 import { useCreateOrderMutation } from '@/lib/services/ordersApi';
 import { IProduct, useGetProductsQuery } from '@/lib/services/productsApi';
-import { set } from 'date-fns';
-import { Textarea } from '@/components/ui/textarea';
 
 import { toast } from 'sonner';
 
@@ -47,7 +45,7 @@ export function OrderModalForm() {
 
   useEffect(() => {
     if (data?.products) setProducts(data?.products || []);
-  });
+  }, [data?.products]);
 
   const handleOrderAdd = async () => {
     if (!selectedProductId) return;
@@ -59,6 +57,7 @@ export function OrderModalForm() {
       email,
       password,
       userId,
+      paymentMethod: 'some payment method',
     };
 
     toast.promise(createOrder(orderData).unwrap(), {

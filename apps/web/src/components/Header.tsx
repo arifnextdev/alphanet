@@ -87,7 +87,7 @@ const Header = () => {
   const dispatch = useDispatch();
   const router = useRouter();
 
-  const [logout, { isLoading }] = useLogoutMutation();
+  const [logout] = useLogoutMutation();
 
   const handleLogout = () => {
     logout()

@@ -208,7 +208,7 @@ export default function OrderDetailsPage() {
                                         toast.success(
                                           `Payment status updated to ${option}`,
                                         );
-                                      } catch (error) {
+                                      } catch {
                                         toast.error('Failed to update payment status');
                                       }
                                     }}

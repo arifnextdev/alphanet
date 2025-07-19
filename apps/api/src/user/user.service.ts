@@ -76,65 +76,7 @@ export class UserService {
   }
 
   // Get a Single User by ID
-  // async getUserById(id: string) {
-  //   const user = await this.prisma.user.findUnique({
-  //     where: { id },
-  //     select: {
-  //       id: true,
-  //       name: true,
-  //       email: true,
-  //       phone: true,
-  //       avatar: true,
-  //       roles: true,
-  //       status: true,
-  //       createdAt: true,
-  //       updatedAt: true,
-  //       userInfo: true,
-  //       orders: {
-  //         select: {
-  //           id: true,
-  //           domainName: true,
-  //           amount: true,
-  //           paidAt: true,
-  //           expiresAt: true,
-  //           status: true,
-  //           product: { select: { name: true, type: true } },
-  //         },
-  //         orderBy: { createdAt: 'desc' },
-  //       },
-  //       payments: {
-  //         orderBy: { createdAt: 'desc' },
-  //         select: {
-  //           id: true,
-  //           amount: true,
-  //           status: true,
-  //           subtotal: true,
-  //           paidAt: true,
-  //           method: true,
-  //           currency: true,
-  //         },
-  //       },
-  //       loginHistories: true,
-  //     },
-  //   });
-  //   if (!user) {
-  //     throw new NotFoundException('User not found');
-  //   }
-
-  //   return user;
-  // }
-
-  // Get a Single User by ID with orders & payments pagination
-  async getUserById(
-    id: string,
-    orderPage: number = 1,
-    orderLimit: number = 10,
-    paymentPage: number = 1,
-    paymentLimit: number = 10,
-  ) {
-    const orderSkip = (orderPage - 1) * orderLimit;
-    const paymentSkip = (paymentPage - 1) * paymentLimit;
-
+  async getUserById(id: string) {
     const user = await this.prisma.user.findUnique({
       where: { id },
       select: {
@@ -147,62 +89,139 @@ export class UserService {
         status: true,
         createdAt: true,
         updatedAt: true,
-        userInfo: true,
-        orders: {
+        userInfo: {
           select: {
-            id: true,
-            domainName: true,
-            amount: true,
-            paidAt: true,
-            expiresAt: true,
-            status: true,
-            product: { select: { name: true, type: true } },
-          },
-          orderBy: { createdAt: 'desc' },
-          skip: orderSkip,
-          take: orderLimit,
-        },
-        payments: {
-          orderBy: { createdAt: 'desc' },
-          skip: paymentSkip,
-          take: paymentLimit,
-          select: {
-            id: true,
-            amount: true,
-            status: true,
-            subtotal: true,
-            paidAt: true,
-            method: true,
-            currency: true,
+            street: true,
+            city: true,
+            state: true,
+            country: true,
+            postalCode: true,
           },
         },
         loginHistories: true,
       },
     });
-
     if (!user) {
       throw new NotFoundException('User not found');
     }
 
-    // Get total counts for pagination
-    const [ordersCount, paymentsCount] = await Promise.all([
-      this.prisma.order.count({ where: { userId: id } }),
-      this.prisma.payment.count({ where: { userId: id } }),
+    return user;
+  }
+
+  // Get Orders by User ID
+  async getOrdersByUserId(
+    id: string,
+    page: number = 1,
+    limit: number = 10,
+    status?: string,
+    search?: string,
+  ) {
+    const user = await this.prisma.user.findUnique({ where: { id } });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    const skip = (page - 1) * limit;
+
+    let where: any = {
+      userId: id,
+      ...(status && { status }),
+      ...(search && {
+        OR: [
+          { domainName: { contains: search, mode: 'insensitive' } },
+          { product: { name: { contains: search, mode: 'insensitive' } } },
+        ],
+      }),
+    };
+
+    const [orders, totalCount] = await Promise.all([
+      this.prisma.order.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          domainName: true,
+          amount: true,
+          paidAt: true,
+          expiresAt: true,
+          status: true,
+          product: { select: { name: true, type: true } },
+        },
+      }),
+      this.prisma.order.count({ where }),
     ]);
 
+    const totalPages = Math.ceil(totalCount / limit);
+
     return {
-      ...user,
-      ordersPagination: {
-        currentPage: orderPage,
-        perPage: orderLimit,
-        totalOrders: ordersCount,
-        totalPages: Math.ceil(ordersCount / orderLimit),
+      data: orders,
+      pagination: {
+        currentPage: page,
+        perPage: limit,
+        totalOrders: totalCount,
+        totalPages,
+        nextPage: page < totalPages ? page + 1 : null,
+        prevPage: page > 1 ? page - 1 : null,
       },
-      paymentsPagination: {
-        currentPage: paymentPage,
-        perPage: paymentLimit,
-        totalPayments: paymentsCount,
-        totalPages: Math.ceil(paymentsCount / paymentLimit),
+    };
+  }
+
+  // Get Payments by User ID
+  async getTransactionsByUserId(
+    id: string,
+    page: number = 1,
+    limit: number = 10,
+    status?: string,
+    search?: string,
+  ) {
+    const user = await this.prisma.user.findUnique({ where: { id } });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const skip = (page - 1) * limit;
+
+    let where: any = {
+      userId: id,
+      ...(status && { status }),
+      ...(search && {
+        OR: [{ transId: { contains: search, mode: 'insensitive' } }],
+      }),
+    };
+
+    const [payments, totalCount] = await Promise.all([
+      this.prisma.payment.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          amount: true,
+          status: true,
+          subtotal: true,
+          paidAt: true,
+          method: true,
+          currency: true,
+          transId: true,
+        },
+      }),
+      this.prisma.payment.count({ where }),
+    ]);
+
+    const totalPages = Math.ceil(totalCount / limit);
+
+    return {
+      data: payments,
+      pagination: {
+        currentPage: page,
+        perPage: limit,
+        totalPayments: totalCount,
+        totalPages,
+        nextPage: page < totalPages ? page + 1 : null,
+        prevPage: page > 1 ? page - 1 : null,
       },
     };
   }

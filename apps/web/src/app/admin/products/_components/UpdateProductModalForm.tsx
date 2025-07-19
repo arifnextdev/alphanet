@@ -36,7 +36,7 @@ export function UpdateProductModalForm({ product }: { product: IProduct }) {
   const [quantity, setQuantity] = useState('');
   const [grade, setGrade] = useState('');
   const [discount, setDiscount] = useState('');
-  const [config, setConfig] = useState<any>({});
+  const [config, setConfig] = useState<Record<string, unknown>>({});
 
   const [updateProduct, { isLoading }] = useUpdateProductMutation();
 
@@ -81,7 +81,9 @@ export function UpdateProductModalForm({ product }: { product: IProduct }) {
           <div className="grid grid-cols-4 items-center gap-4">
             <Label className="text-right">Registrar</Label>
             <Input
-              value={config.registrar || ''}
+              value={
+                typeof config.registrar === 'string' ? config.registrar : ''
+              }
               onChange={(e) =>
                 setConfig({ ...config, registrar: e.target.value })
               }
@@ -95,7 +97,7 @@ export function UpdateProductModalForm({ product }: { product: IProduct }) {
             <div className="grid grid-cols-4 items-center gap-4">
               <Label className="text-right">Disk Space</Label>
               <Input
-                value={config.disk || ''}
+                value={typeof config.disk === 'string' ? config.disk : ''}
                 onChange={(e) => setConfig({ ...config, disk: e.target.value })}
                 className="col-span-3"
               />
@@ -103,7 +105,9 @@ export function UpdateProductModalForm({ product }: { product: IProduct }) {
             <div className="grid grid-cols-4 items-center gap-4">
               <Label className="text-right">Bandwidth</Label>
               <Input
-                value={config.bandwidth || ''}
+                value={
+                  typeof config.bandwidth === 'string' ? config.bandwidth : ''
+                }
                 onChange={(e) =>
                   setConfig({ ...config, bandwidth: e.target.value })
                 }
@@ -117,7 +121,7 @@ export function UpdateProductModalForm({ product }: { product: IProduct }) {
           <div className="grid grid-cols-4 items-center gap-4">
             <Label className="text-right">Provider</Label>
             <Input
-              value={config.provider || ''}
+              value={typeof config.provider === 'string' ? config.provider : ''}
               onChange={(e) =>
                 setConfig({ ...config, provider: e.target.value })
               }
@@ -130,7 +134,7 @@ export function UpdateProductModalForm({ product }: { product: IProduct }) {
           <div className="grid grid-cols-4 items-center gap-4">
             <Label className="text-right">Email Accounts</Label>
             <Input
-              value={config.accounts || ''}
+              value={typeof config.accounts === 'string' ? config.accounts : ''}
               onChange={(e) =>
                 setConfig({ ...config, accounts: e.target.value })
               }
@@ -146,7 +150,7 @@ export function UpdateProductModalForm({ product }: { product: IProduct }) {
             <div className="grid grid-cols-4 items-center gap-4">
               <Label className="text-right">CPU</Label>
               <Input
-                value={config.cpu || ''}
+                value={typeof config.cpu === 'string' ? config.cpu : ''}
                 onChange={(e) => setConfig({ ...config, cpu: e.target.value })}
                 className="col-span-3"
               />
@@ -154,7 +158,7 @@ export function UpdateProductModalForm({ product }: { product: IProduct }) {
             <div className="grid grid-cols-4 items-center gap-4">
               <Label className="text-right">RAM</Label>
               <Input
-                value={config.ram || ''}
+                value={typeof config.ram === 'string' ? config.ram : ''}
                 onChange={(e) => setConfig({ ...config, ram: e.target.value })}
                 className="col-span-3"
               />
@@ -166,7 +170,7 @@ export function UpdateProductModalForm({ product }: { product: IProduct }) {
           <div className="grid grid-cols-4 items-center gap-4">
             <Label className="text-right">SMS Count</Label>
             <Input
-              value={config.smsCount || ''}
+              value={typeof config.smsCount === 'string' ? config.smsCount : ''}
               onChange={(e) =>
                 setConfig({ ...config, smsCount: e.target.value })
               }

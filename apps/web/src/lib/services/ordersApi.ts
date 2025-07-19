@@ -45,7 +45,7 @@ export interface Transaction {
   status: string;
   createdAt: string;
   paidAt: string | null;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
   order: OrderInfo;
 }
 
@@ -70,6 +70,11 @@ interface IGetUsersParams {
   search?: string;
 }
 
+export interface MetaData {
+  key: string;
+  value: string;
+}
+
 export interface IOrder {
   id: string;
   userId: string;
@@ -77,7 +82,7 @@ export interface IOrder {
   domainName?: string;
   username?: string;
   password?: string;
-  metadata?: string;
+  metadata?: Record<string, string>;
   status: string;
   amount?: number | null;
   discount: number;
@@ -131,7 +136,10 @@ interface OrderResponse {
 
 export const ordersApi = createApi({
   reducerPath: 'ordersApi',
-  baseQuery: fetchBaseQuery({ baseUrl: 'http://localhost:3001/' }),
+  baseQuery: fetchBaseQuery({
+    baseUrl: 'http://localhost:3001/',
+    credentials: 'include',
+  }),
   tagTypes: ['Orders'],
   endpoints: (builder) => ({
     getOrders: builder.query<IGetUsersResponse, IGetUsersParams>({
@@ -147,7 +155,7 @@ export const ordersApi = createApi({
     }),
     createOrder: builder.mutation<Partial<OrderResponse>, CreateOrderPayload>({
       query: (data) => ({
-        url: 'orders',
+        url: 'orders/admin',
         method: 'POST',
         body: data,
       }),
@@ -180,7 +188,7 @@ export const ordersApi = createApi({
       }),
       invalidatesTags: ['Orders'],
     }),
-    toggleOrderStatus: builder.mutation<void, { id: string; status: string }>({
+    updateOrderStatus: builder.mutation<void, { id: string; status: string }>({
       query: ({ id, status }) => ({
         url: `orders/${id}/status`,
         method: 'PATCH',
@@ -198,6 +206,14 @@ export const ordersApi = createApi({
         invalidatesTags: ['Orders'],
       },
     ),
+    addMetaData: builder.mutation<void, { id: string; data: Object }>({
+      query: ({ id, data }) => ({
+        url: `orders/admin/${id}/metadata`,
+        method: 'PUT',
+        body: data,
+      }),
+      invalidatesTags: ['Orders'],
+    }),
   }),
 });
 
@@ -207,6 +223,7 @@ export const {
   useGetOrderByIdQuery,
   useGetFilterTransectionQuery,
   useDeleteOrderMutation,
-  useToggleOrderStatusMutation,
+  useUpdateOrderStatusMutation,
   useTogglePaymentStatusMutation,
+  useAddMetaDataMutation,
 } = ordersApi;

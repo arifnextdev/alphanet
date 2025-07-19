@@ -24,7 +24,4 @@ export class TasksService {
 
     console.log('Email provisioning job created:', job.id);
   }
-
-
-  
 }

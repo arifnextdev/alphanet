@@ -7,7 +7,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { useToggleOrderStatusMutation } from '@/lib/services/ordersApi';
+import { useUpdateOrderStatusMutation } from '@/lib/services/ordersApi';
 import { PencilIcon } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -32,13 +32,13 @@ const ToggoleStatus = ({
   url?: string;
   options?: string[];
 }) => {
-  const [toggleOrderStatus, { isLoading }] = useToggleOrderStatusMutation();
+  const [updateOrderStatus, { isLoading }] = useUpdateOrderStatusMutation();
 
   const handleStatusChange = async (newStatus: string) => {
     try {
-      await toggleOrderStatus({ id, status: newStatus }).unwrap();
+      await updateOrderStatus({ id, status: newStatus }).unwrap();
       toast.success(`Order status updated to ${newStatus}`);
-    } catch (error) {
+    } catch {
       toast.error('Failed to update order status');
     }
   };

@@ -15,7 +15,6 @@ import { format } from 'date-fns';
 import { EyeIcon } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
 
 export default function ProductOrderHistoryPage() {
   const { id } = useParams();
@@ -75,7 +74,7 @@ export default function ProductOrderHistoryPage() {
             </TableHeader>
             <TableBody>
               {orders?.length > 0 ? (
-                orders.map((order: Order) => (
+                orders.map((order) => (
                   <TableRow key={order.id}>
                     <TableCell>{order.id.slice(0, 6)}...</TableCell>
                     <TableCell>{order.domainName}</TableCell>

@@ -148,14 +148,17 @@ export class MailService {
     return this.mailerService.sendMail(mailOptions);
   }
 
-  async sendCpanelAccountToCustomer(
-    {userName,
+  async sendCpanelAccountToCustomer({
+    userName,
     password,
     email,
-    domain = 'cpanel.vps.neverinstall.com',}:{
-      userName:string,password:string,email:string,domain:string
-    }
-  ): Promise<void> {
+    domain = 'cpanel.vps.neverinstall.com',
+  }: {
+    userName: string;
+    password: string;
+    email: string;
+    domain: string;
+  }): Promise<void> {
     const subject = '🛠️ Your cPanel Account Information';
     const cpanelUrl = `https://${domain}:2087`;
 

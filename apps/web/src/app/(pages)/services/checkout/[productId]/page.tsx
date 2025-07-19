@@ -56,12 +56,14 @@ export default function CheckoutPage() {
 
   const priceSummary = calculateSummary();
 
+  const isValidDomain = (name: string) =>
+    /^[a-zA-Z0-9-]+\.[a-zA-Z]{2,}$/.test(name);
 
   const handleCreateOrder = () => {
     if (authUser) {
       toast.promise(
         createOrder({
-          productId: product.id,
+          productId: productId as string,
           userId: authUser.id,
           domainName,
           paymentMethod,
@@ -69,8 +71,8 @@ export default function CheckoutPage() {
           .unwrap()
           .then((res) => {
             console.log(res);
-            if (res?.redirectURL) {
-              router.push(res.redirectURL);
+            if (res?.bkashURL) {
+              router.push(res?.bkashURL);
             } else {
               toast.success('Order placed successfully!');
             }
@@ -101,12 +103,12 @@ export default function CheckoutPage() {
         <div>
           <h2 className="text-2xl font-semibold mb-4">Order Details</h2>
           <div className="space-y-4">
-            <div>
+            <div className="space-y-2">
               <Label>Product Name</Label>
               <Input value={product.name} readOnly disabled />
             </div>
             {(product.type === 'HOSTING' || product.type === 'DOMAIN') && (
-              <div>
+              <div className="space-y-2">
                 <Label htmlFor="domainName">Domain Name</Label>
                 <Input
                   id="domainName"
@@ -117,35 +119,35 @@ export default function CheckoutPage() {
               </div>
             )}
 
-            <div>
+            <div className="space-y-2">
               <Label>Payment Method</Label>
               <div className="grid grid-cols-2 gap-4 mt-2">
                 <div
-                  className={`border rounded-lg p-4 text-center cursor-pointer ${
+                  className={`border rounded-lg p-2 text-center cursor-pointer h-[100px] w-full overflow-hidden ${
                     paymentMethod === 'BIKASH' ? 'border-primary' : ''
                   }`}
                   onClick={() => setPaymentMethod('BIKASH')}
                 >
                   <Image
-                    src="/images/bkash.png"
+                    src={'/images/vps/image.png'}
                     alt="bKash"
                     width={80}
                     height={40}
-                    className="mx-auto"
+                    className=" w-full h-full object-cover z-10 bg-white rounded-xl"
                   />
                 </div>
                 <div
-                  className={`border rounded-lg p-4 text-center cursor-pointer ${
+                  className={`border rounded-lg p-2 text-center cursor-pointer h-[100px] w-full overflow-hidden ${
                     paymentMethod === 'NAGAD' ? 'border-primary' : ''
                   }`}
                   onClick={() => setPaymentMethod('NAGAD')}
                 >
                   <Image
-                    src="/images/nagad.png"
+                    src="/images/vps/nagad.png"
                     alt="Nagad"
                     width={80}
                     height={40}
-                    className="mx-auto"
+                    className="mx-auto w-full h-full object-cover z-10 bg-white rounded-xl"
                   />
                 </div>
               </div>
@@ -195,12 +197,13 @@ export default function CheckoutPage() {
           )}
 
           <Button
-            disabled={
+            disabled={Boolean(
               !paymentMethod ||
-              ((product.type === 'HOSTING' || product.type === 'DOMAIN') &&
-                !domainName) ||
-              isLoadingOrder
-            }
+                ((product.type === 'HOSTING' || product.type === 'DOMAIN') &&
+                  !domainName) ||
+                isLoadingOrder ||
+                (domainName && !isValidDomain(domainName)),
+            )}
             onClick={handleCreateOrder}
             className="w-full mt-4"
           >

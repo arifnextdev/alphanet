@@ -29,6 +29,7 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import MetaData from './_components/AddMetaData';
 
 export default function OrderPage() {
   const [query, setQuery] = useState('');
@@ -46,6 +47,8 @@ export default function OrderPage() {
   const orders = data?.orders || [];
   const pagination = data?.pagination;
   const totalPages = pagination?.totalPages || 1;
+
+  const handleChange = () => {};
 
   return (
     <div className="space-y-6">
@@ -103,7 +106,6 @@ export default function OrderPage() {
                   <TableHead>Domain</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Amount</TableHead>
-                  <TableHead>metadata</TableHead>
                   <TableHead>Paid At</TableHead>
                   <TableHead>Expires At</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
@@ -166,7 +168,6 @@ export default function OrderPage() {
                       )}
                     </TableCell>
                     <TableCell>${order.amount}</TableCell>
-                    <TableCell>{order.metadata}</TableCell>
                     <TableCell>
                       {order.paidAt
                         ? new Date(order.paidAt).toLocaleDateString()
@@ -179,6 +180,12 @@ export default function OrderPage() {
                     </TableCell>
                     <TableCell className="text-right flex justify-end gap-3 items-center">
                       <ToggoleStatus id={order.id} status={order.status} />
+                      {order.metadata && (
+                        <MetaData
+                          metadata={order.metadata as Record<string, string>}
+                          orderId={order.id}
+                        />
+                      )}
                       <Link href={`/admin/orders/${order.id}`}>
                         <EyeIcon className="w-5 h-5" />
                       </Link>

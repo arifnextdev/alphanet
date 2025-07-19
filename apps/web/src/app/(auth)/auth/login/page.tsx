@@ -8,9 +8,6 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useDispatch, useSelector } from 'react-redux';
-import { RootState } from '@/lib/store';
-import { setAuth } from '@/lib/slices/authSlice';
 
 export default function LoginPage() {
   const router = useRouter();

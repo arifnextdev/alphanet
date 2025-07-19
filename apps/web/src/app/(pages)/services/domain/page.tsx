@@ -13,34 +13,44 @@ export default function DomainServicePage() {
   const [isAvailable, setIsAvailable] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const checkDomain = async () => {
-    if (!domain) return;
+  const checkDomain = async (domainToCheck?: string) => {
+    const finalDomain = domainToCheck || domain;
+    if (!finalDomain) {
+      toast.error('Please enter a domain name.');
+      return;
+    }
 
+    setDomain(finalDomain);
     setIsLoading(true);
     setIsAvailable(null);
 
-    toast.promise(
-      fetch(`/api/domain/check?name=${domain}`).then(async (res) => {
-        if (!res.ok) {
-          throw new Error('Failed to check domain');
-        }
-        const data = await res.json();
-        if (data.DomainInfo.domainAvailability === 'AVAILABLE') {
-          setIsAvailable(true);
-          return 'Domain is available!';
-        } else {
-          setIsAvailable(false);
-          throw new Error('Domain is not available');
-        }
-      }),
-      {
-        loading: 'Checking domain...',
-        success: (message) => message,
-        error: (err) => err.message,
-      },
-    );
+    try {
+      const res = await fetch(`/api/domain/check?name=${finalDomain}`);
+      if (!res.ok) {
+        throw new Error('Failed to check domain');
+      }
+      const data = await res.json();
+      if (data.DomainInfo.domainAvailability === 'AVAILABLE') {
+        setIsAvailable(true);
+        toast.success('Domain is available!');
+      } else {
+        setIsAvailable(false);
+        toast.error('Domain is not available');
+      }
+    } catch {
+      toast.error('An error occurred while checking the domain. Please try again later.');
+    } finally {
+      setTimeout(() => {
+        setIsLoading(false);
+      }, 500);
+    }
+  };
 
-    setIsLoading(false);
+  const handleRegisterNow = (tld: string) => {
+    const domainParts = domain.split('.');
+    const baseDomain = domainParts.length > 1 ? domainParts.slice(0, -1).join('.') : domain;
+    const newDomain = `${baseDomain}${tld}`;
+    checkDomain(newDomain);
   };
 
   const pricing = [
@@ -80,8 +90,34 @@ export default function DomainServicePage() {
               onChange={(e) => setDomain(e.target.value)}
               className="flex-1"
             />
-            <Button onClick={checkDomain} disabled={isLoading}>
-              {isLoading ? 'Checking...' : 'Search'}
+                        <Button onClick={() => checkDomain()} disabled={isLoading}>
+              {isLoading ? (
+                <>
+                  <svg
+                    className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                  Checking...
+                </>
+              ) : (
+                'Search'
+              )}
             </Button>
           </div>
 
@@ -90,7 +126,9 @@ export default function DomainServicePage() {
             <div className="mt-4 text-lg font-semibold z-10">
               {isAvailable ? (
                 <div className="flex items-center gap-4">
-                  <span className="text-green-500">🎉 Domain is available!</span>
+                  <span className="text-green-500">
+                    🎉 Domain is available!
+                  </span>
                   <Link href={`/services/checkout?domain=${domain}`}>
                     <Button>Buy Now</Button>
                   </Link>
@@ -141,7 +179,12 @@ export default function DomainServicePage() {
                 Annual Price
               </p>
               <p className="text-3xl font-bold mb-4 text-primary">৳{price}</p>
-              <Button>Register Now</Button>
+                                <Button
+                onClick={() => handleRegisterNow(tld)}
+                disabled={isLoading}
+              >
+                {isLoading && domain.endsWith(tld) ? 'Checking...' : 'Register Now'}
+              </Button>
             </div>
           ))}
         </div>

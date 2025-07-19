@@ -17,8 +17,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
-import { set } from 'date-fns';
-import { User } from 'lucide-react';
 
 const MailModal = ({ id }: { id?: string }) => {
   const [email, setEmail] = useState('');
@@ -55,8 +53,8 @@ const MailModal = ({ id }: { id?: string }) => {
       setEmail('');
       setDescription('');
       setSubject('Order Confirmation');
-    } catch (err: any) {
-      toast.error(err.message || 'Something went wrong');
+    } catch (err: unknown) {
+      toast.error((err as Error).message || 'Something went wrong');
     } finally {
       setLoading(false);
     }
