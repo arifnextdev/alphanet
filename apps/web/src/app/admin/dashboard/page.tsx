@@ -37,7 +37,7 @@ export default function AdminDashboard() {
     { _id: 'PAID', count: 89 },
     { _id: 'CANCELLED', count: 17 },
   ]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchDashboardData() {

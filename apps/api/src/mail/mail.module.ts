@@ -4,7 +4,6 @@ import { MailerModule } from '@nestjs-modules/mailer';
 import { PrismaModule } from 'src/prisma/prisma.module';
 import { MailController } from './mail.controller';
 
-
 @Module({
   imports: [
     MailerModule.forRoot({

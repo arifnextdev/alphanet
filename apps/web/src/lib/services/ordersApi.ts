@@ -1,4 +1,5 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { IProduct } from './productsApi';
 interface UserInfo {
   id: string;
   name: string;
@@ -44,7 +45,7 @@ export interface Transaction {
   status: string;
   createdAt: string;
   paidAt: string | null;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
   order: OrderInfo;
 }
 
@@ -69,6 +70,11 @@ interface IGetUsersParams {
   search?: string;
 }
 
+export interface MetaData {
+  key: string;
+  value: string;
+}
+
 export interface IOrder {
   id: string;
   userId: string;
@@ -76,7 +82,7 @@ export interface IOrder {
   domainName?: string;
   username?: string;
   password?: string;
-  metadata?: string;
+  metadata?: Record<string, string>;
   status: string;
   amount?: number | null;
   discount: number;
@@ -85,6 +91,8 @@ export interface IOrder {
   subTotal: number;
   paidAt?: Date | string | undefined; // ISO string (e.g. "2025-05-01T10:00:00Z")
   expiresAt?: Date | string; // ISO string
+  payments: Transaction[];
+  product: IProduct;
   //   createdAt: Date | string; // ISO str
 }
 
@@ -96,6 +104,7 @@ export interface CreateOrderPayload {
   email?: string;
   password?: string;
   metadata?: string;
+  paymentMethod: string;
 }
 
 interface IPagination {
@@ -127,7 +136,10 @@ interface OrderResponse {
 
 export const ordersApi = createApi({
   reducerPath: 'ordersApi',
-  baseQuery: fetchBaseQuery({ baseUrl: 'http://localhost:3001/' }),
+  baseQuery: fetchBaseQuery({
+    baseUrl: 'http://localhost:3001/',
+    credentials: 'include',
+  }),
   tagTypes: ['Orders'],
   endpoints: (builder) => ({
     getOrders: builder.query<IGetUsersResponse, IGetUsersParams>({
@@ -143,7 +155,18 @@ export const ordersApi = createApi({
     }),
     createOrder: builder.mutation<Partial<OrderResponse>, CreateOrderPayload>({
       query: (data) => ({
-        url: 'Orders',
+        url: 'orders',
+        method: 'POST',
+        body: data,
+      }),
+      invalidatesTags: ['Orders'],
+    }),
+    createAdminOrder: builder.mutation<
+      Partial<OrderResponse>,
+      CreateOrderPayload
+    >({
+      query: (data) => ({
+        url: 'orders/admin',
         method: 'POST',
         body: data,
       }),
@@ -151,15 +174,16 @@ export const ordersApi = createApi({
     }),
     getOrderById: builder.query<IOrder, string>({
       query: (id) => ({
-        url: `Orders/${id}`,
+        url: `orders/${id}`,
       }),
+      providesTags: ['Orders'],
     }),
     getFilterTransection: builder.query<
       FilteredTransactionResponse,
       IFilterParams
     >({
       query: ({ limit = 10, page = 1, ...params }) => ({
-        url: 'Orders/transection/details',
+        url: 'orders/transection/details',
         params: {
           limit,
           page,
@@ -168,12 +192,50 @@ export const ordersApi = createApi({
       }),
       providesTags: ['Orders'],
     }),
+    deleteOrder: builder.mutation<void, string>({
+      query: (id) => ({
+        url: `orders/${id}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Orders'],
+    }),
+    updateOrderStatus: builder.mutation<void, { id: string; status: string }>({
+      query: ({ id, status }) => ({
+        url: `orders/${id}/status`,
+        method: 'PATCH',
+        body: { status },
+      }),
+      invalidatesTags: ['Orders'],
+    }),
+    togglePaymentStatus: builder.mutation<void, { id: string; status: string }>(
+      {
+        query: ({ id, status }) => ({
+          url: `payments/${id}/status`,
+          method: 'PATCH',
+          body: { status },
+        }),
+        invalidatesTags: ['Orders'],
+      },
+    ),
+    addMetaData: builder.mutation<void, { id: string; data: Object }>({
+      query: ({ id, data }) => ({
+        url: `orders/admin/${id}/metadata`,
+        method: 'PUT',
+        body: data,
+      }),
+      invalidatesTags: ['Orders'],
+    }),
   }),
 });
 
 export const {
   useGetOrdersQuery,
   useCreateOrderMutation,
+  useCreateAdminOrderMutation,
   useGetOrderByIdQuery,
   useGetFilterTransectionQuery,
+  useDeleteOrderMutation,
+  useUpdateOrderStatusMutation,
+  useTogglePaymentStatusMutation,
+  useAddMetaDataMutation,
 } = ordersApi;

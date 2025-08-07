@@ -4,9 +4,11 @@ import {
   Delete,
   Get,
   Param,
+  Patch,
   Post,
   Put,
   Query,
+  UseGuards,
   UsePipes,
 } from '@nestjs/common';
 import { OrderService } from './order.service';
@@ -17,6 +19,14 @@ import {
   OrederCreateDto,
 } from '../common/dto/order.dto';
 import { ZodValidationPipe } from '../common/zodValidationPipe';
+import {
+  AdminOrderCreateDto,
+  adminOrderCreateSchema,
+} from '../common/dto/admin.order.dto';
+import { AuthGuard } from '@nestjs/passport';
+import { RoleGuard } from 'src/roles/guards';
+import { Role } from '@prisma/client';
+import { Roles } from 'src/roles/decorator';
 
 @Controller('orders')
 export class OrderController {
@@ -38,14 +48,29 @@ export class OrderController {
     return this.orderService.createOrder(data);
   }
 
+  @Post('/admin')
+  // @UseGuards(AuthGuard('jwt'), RoleGuard)
+  @Roles(Role.ADMIN, Role.MODERATOR)
+  @UsePipes(new ZodValidationPipe(adminOrderCreateSchema))
+  createOrderAdmin(@Body() data: AdminOrderCreateDto) {
+    return this.orderService.createOrderAdmin(data);
+  }
+
+  @Put('/admin/:id/metadata')
+  // @UseGuards(AuthGuard('jwt'), RoleGuard)
+  @Roles(Role.ADMIN, Role.MODERATOR)
+  updateOrderMetadata(@Body() metadata: any, @Param('id') id: string) {
+    return this.orderService.updateOrderMetadata(id, metadata);
+  }
+
+  @Patch(':id/status')
+  updateOrderStatus(@Body() status: string, @Param('id') id: string) {
+    return this.orderService.updatedOrderStatus(id, status);
+  }
+
   @Put(':id')
   updateOrder(@Param('id') id: string) {
     return this.orderService.updateOrder(id);
-  }
-
-  @Put(':id/status')
-  updateOrderStatus(@Body() status: string ,@Param('id') id: string ) {
-    return this.orderService.updatedOrderStatus(id, status);
   }
 
   @Delete(':id')

@@ -21,7 +21,7 @@ export interface IProduct {
   grade: string;
   price: number;
   billingCycle: string;
-  config: any;
+  config: Record<string, unknown>;
 }
 
 interface IPagination {
@@ -33,6 +33,17 @@ interface IPagination {
   hasPrevPage: boolean;
   nextPage: number | null;
   prevPage: number | null;
+}
+
+export interface SingleProduct extends IProduct {
+  orders: Array<{
+    id: string;
+    domainName: string;
+    status: string;
+    amount: number;
+    paidAt: string | null;
+    expiresAt: string | null;
+  }>;
 }
 
 interface IGetUsersResponse {
@@ -64,7 +75,7 @@ export const productsApi = createApi({
       }),
       invalidatesTags: ['Products'],
     }),
-    getProductById: builder.query<IProduct, string>({
+    getProductById: builder.query<SingleProduct, string>({
       query: (id) => ({
         url: `products/${id}`,
       }),

@@ -17,7 +17,10 @@ export const authApi = createApi({
   baseQuery: fetchBaseQuery({ baseUrl: BASE_URL }),
   tagTypes: ['Auth'],
   endpoints: (builder) => ({
-    login: builder.mutation<IUser, { email: string; password: string }>({
+    login: builder.mutation<
+      { accessToken: string },
+      { email: string; password: string }
+    >({
       query: ({ email, password }: { email: string; password: string }) => ({
         url: '/auth/login',
         method: 'POST',

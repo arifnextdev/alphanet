@@ -1,13 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
+import { CreateCpanelAccountParams } from './tasks.processor';
 
 @Injectable()
 export class TasksService {
   constructor(@InjectQueue('provision') private provisionQueue: Queue) {}
 
-  async queueCpanel(user: any) {
-    await this.provisionQueue.add('create-cpanel-account', user);
+  async queueCpanel(data: CreateCpanelAccountParams) {
+    await this.provisionQueue.add('create-cpanel-account', data);
   }
 
   async queueVps(user: any) {

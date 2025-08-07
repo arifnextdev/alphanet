@@ -4,9 +4,10 @@ import { BikashController } from './bikash.controller';
 import { PrismaModule } from 'src/prisma/prisma.module';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { TasksModule } from 'src/tasks/tasks.module';
+import { MailModule } from 'src/mail/mail.module';
 
 @Module({
-  imports: [PrismaModule, TasksModule],
+  imports: [PrismaModule, TasksModule, MailModule],
   providers: [BikashService, PrismaService],
   controllers: [BikashController],
   exports: [BikashService],

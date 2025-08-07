@@ -3,11 +3,13 @@
 import Hero from '@/components/sections/Hero';
 import { Button } from '@/components/ui/button';
 import { totalPrice } from '@/lib/calculate';
-import { useGetProductsQuery } from '@/lib/services/productsApi';
+import { IProduct, useGetProductsQuery } from '@/lib/services/productsApi';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+
 import { useState } from 'react';
+
+
 
 export default function HostingServicePage() {
   const { data, isLoading } = useGetProductsQuery({
@@ -17,7 +19,6 @@ export default function HostingServicePage() {
     status: 'ACTIVE',
   });
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
-  const router = useRouter();
 
   const faqs = [
     {
@@ -38,7 +39,6 @@ export default function HostingServicePage() {
     },
   ];
 
-  
   return (
     <div className="">
       <Hero>
@@ -81,23 +81,21 @@ export default function HostingServicePage() {
       {/* SEO Section */}
       <section className="max-w-5xl mx-auto px-4 py-20 text-center">
         <h2 className="text-3xl md:text-4xl font-extrabold text-primary dark:text-white mb-6 tracking-tight">
-          Blazing Fast Hosting with{' '}
+          Blazing Fast Hosting with&apos;
           <span className="text-blue-600">99.99% Uptime</span>
         </h2>
         <p className="text-gray-700 dark:text-gray-300 text-lg leading-relaxed">
-          Experience lightning-fast performance powered by{' '}
+          Experience lightning-fast performance powered by&apos;
           <strong className="text-gray-900 dark:text-white">
             NVMe SSD storage
           </strong>
           ,
           <strong className="text-gray-900 dark:text-white">
-            {' '}
-            LiteSpeed web servers
+            &apos; LiteSpeed web servers
           </strong>
           , and a global
           <strong className="text-gray-900 dark:text-white">
-            {' '}
-            CDN network
+            &apos; CDN network
           </strong>
           . Perfect for eCommerce, blogs, agencies, and SaaS startups aiming to
           scale quickly without compromising on cost or performance.
@@ -164,8 +162,9 @@ export default function HostingServicePage() {
             <p className="col-span-full text-center">Loading plans...</p>
           ) : (
             data?.products &&
-            data.products.map((plan, index) => {
+            data.products.map((plan: IProduct) => {
               const isPopular = plan.grade === 'PREMIUM';
+
               return (
                 <div
                   key={plan.id}
@@ -217,23 +216,26 @@ export default function HostingServicePage() {
 
                   {/* Features */}
                   <div className="text-left text-sm mb-6 text-gray-700 dark:text-gray-200 space-y-2">
-                    <p className="font-medium">What's included:</p>
-                    {plan.description.split('\n').map((item, idx) => (
-                      <p key={idx}>• {item}</p>
-                    ))}
+                    <p className="font-medium">What&apos;s included:</p>
+                    {plan.description
+                      .split('\n')
+                      .map((item: string, idx: number) => (
+                        <p key={idx}>• {item}</p>
+                      ))}
                   </div>
 
-                  {/* Button */}
-                  <Button
-                    className={`w-full ${
-                      isPopular
-                        ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                        : ''
-                    }`}
-                    variant={isPopular ? 'default' : 'outline'}
-                  >
-                    Get Started
-                  </Button>
+                  <Link href={`/services/checkout/${plan.id}`}>
+                    <Button
+                      className={`w-full ${
+                        isPopular
+                          ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                          : ''
+                      }`}
+                      variant={isPopular ? 'default' : 'outline'}
+                    >
+                      Get Started
+                    </Button>
+                  </Link>
                 </div>
               );
             })
@@ -248,7 +250,7 @@ export default function HostingServicePage() {
             Perfect For Every Project
           </h2>
           <p className="mb-10 text-gray-600 dark:text-gray-400">
-            Whether you're launching a store, building client websites, or
+            Whether you&apos;re launching a store, building client websites, or
             running a SaaS product, our hosting solutions scale with you.
           </p>
 

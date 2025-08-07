@@ -2,6 +2,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import axios from 'axios';
 import { Response } from 'express';
+import { MailService } from 'src/mail/mail.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { TasksService } from 'src/tasks/tasks.service';
 
@@ -10,6 +11,7 @@ export class BikashService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly taskService: TasksService,
+    private readonly mailService: MailService,
   ) {}
   private readonly baseURL = process.env.BKASH_BASE_URL;
   private readonly appKey = process.env.BKASH_APP_KEY;
@@ -123,7 +125,7 @@ export class BikashService {
         const { data } = await axios.post(`${this.executeUrl}`, { paymentID });
 
         if (data && data.statusCode === '0000') {
-          await this.prisma.payment.update({
+          const payment = await this.prisma.payment.update({
             where: { id: payID },
             data: {
               status: 'SUCCESS',
@@ -137,7 +139,69 @@ export class BikashService {
                 intent: data.intent,
               },
             },
+            select: {
+              id: true,
+              status: true,
+              amount: true,
+              paidAt: true,
+              createdAt: true,
+              method: true,
+              currency: true,
+              transId: true,
+              tax: true,
+              vat: true,
+              discount: true,
+              subtotal: true,
+              order: {
+                include: {
+                  product: true,
+                  user: {
+                    select: {
+                      id: true,
+                      email: true,
+                      name: true,
+                    },
+                  },
+                },
+              },
+            },
           });
+
+          if (payment.order.product.type === 'HOSTING') {
+            if (
+              payment.order.metadata &&
+              typeof payment.order.metadata === 'object' &&
+              'userName' in payment.order.metadata
+            ) {
+              const userName = payment.order.metadata.userName;
+              const password = payment.order.metadata.password;
+              const plan = payment.order.metadata.plan;
+              if (
+                typeof userName === 'string' &&
+                typeof password === 'string' &&
+                typeof plan === 'string'
+              ) {
+                this.taskService.queueCpanel({
+                  userId: payment.order.user.id,
+                  orderId: payment.order.id,
+                  userName,
+                  domain: data.domainName,
+                  password: password,
+                  email: payment.order.user.email,
+                  plan: plan,
+                });
+              } else {
+                // Handle the case where userName is not a string
+              }
+            }
+          }
+
+          this.taskService.queueEmail(payment.order.id);
+          this.mailService.sendAdminAlertEmail(
+            `Payment successful for order ${payment.order.id} from user ${payment.order.user.id} `,
+            `Payment ID: ${payment.id}, Amount: ${payment.amount}, Status: ${payment.status}. Order Details: ${payment.order.domainName ? 'Domain Name: ' + payment.order.domainName : 'No Domain Name'} ${payment.order.product.name ? ', Product: ' + payment.order.product.name : ''} ${payment.order.product.type ? ', Type: ' + payment.order.product.type : ''}. User: ${payment.order.user.name} (${payment.order.user.email})`,
+            payment.order.userId,
+          );
           res.redirect(
             `http://localhost:3000/success?message=${data.message}&payID=${payID}`,
           );

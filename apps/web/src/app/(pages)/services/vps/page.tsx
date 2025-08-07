@@ -7,20 +7,15 @@ import { useGetProductsQuery } from '@/lib/services/productsApi';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
-import { OrderDialog } from '../_components/OrderModal';
-import { useSelector } from 'react-redux';
-import { RootState } from '@/lib/store';
 
 export default function VpsServicePage() {
-  const { data, isLoading, isError } = useGetProductsQuery({
+  const { data, isLoading } = useGetProductsQuery({
     page: 1,
     limit: 10,
     type: 'VPS',
     status: 'ACTIVE',
   });
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
-
-  const authUser = useSelector((state: RootState) => state.auth.user);
 
   return (
     <div className=" ">
@@ -73,7 +68,7 @@ export default function VpsServicePage() {
             <p className="col-span-full text-center">Loading plans...</p>
           ) : (
             data?.products &&
-            data.products.map((plan, index) => {
+            data.products.map((plan) => {
               const isPopular = plan.grade === 'PREMIUM';
               return (
                 <div
@@ -126,17 +121,22 @@ export default function VpsServicePage() {
 
                   {/* Features */}
                   <div className="text-left text-sm mb-6 text-gray-700 dark:text-gray-200 space-y-2">
-                    <p className="font-medium">What's included:</p>
+                    <p className="font-medium">What&apos;s included:</p>
                     {plan.description.split('\n').map((item, idx) => (
                       <p key={idx}>• {item}</p>
                     ))}
                   </div>
 
-                  <OrderDialog
-                    product={plan}
-                    user={authUser}
-                    isPopular={isPopular}
-                  />
+                  <Link href={`/services/checkout/${plan.id}`}>
+                    <Button
+                      className={`w-full ${
+                        isPopular ? 'bg-blue-600 hover:bg-blue-700 text-white' : ''
+                      }`}
+                      variant={isPopular ? 'default' : 'outline'}
+                    >
+                      Get Started
+                    </Button>
+                  </Link>
                 </div>
               );
             })
@@ -198,7 +198,7 @@ export default function VpsServicePage() {
               {
                 name: 'Anika Roy',
                 quote:
-                  'The best hosting experience I’ve had. Performance is excellent and support is always responsive.',
+                  'The best hosting experience I&apos;ve had. Performance is excellent and support is always responsive.',
                 avatar: '/images/vps/testi1.jpg',
               },
               {

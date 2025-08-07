@@ -1,9 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { EyeIcon } from 'lucide-react';
+import { OrderModalForm } from './_components/OrderModalForm';
 
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import Link from 'next/link';
+import MailModal from './_components/MailModal';
+import ToggoleStatus from './_components/ToggoleStatus';
+import { IOrder, useGetOrdersQuery } from '@/lib/services/ordersApi';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import {
@@ -23,13 +27,9 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { useGetOrdersQuery } from '@/lib/services/ordersApi';
-import { Copy, EyeIcon } from 'lucide-react';
-import { OrderModalForm } from './_components/OrderModalForm';
-
-import Link from 'next/link';
-import MailModal from './_components/MailModal';
-import ToggoleStatus from './_components/ToggoleStatus';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import MetaData from './_components/AddMetaData';
 
 export default function OrderPage() {
   const [query, setQuery] = useState('');
@@ -47,6 +47,8 @@ export default function OrderPage() {
   const orders = data?.orders || [];
   const pagination = data?.pagination;
   const totalPages = pagination?.totalPages || 1;
+
+  const handleChange = () => {};
 
   return (
     <div className="space-y-6">
@@ -104,34 +106,68 @@ export default function OrderPage() {
                   <TableHead>Domain</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Amount</TableHead>
-                  <TableHead>metadata</TableHead>
                   <TableHead>Paid At</TableHead>
                   <TableHead>Expires At</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {orders.map((order: any) => (
+                {orders.map((order: IOrder) => (
                   <TableRow key={order.id} className="group">
                     <TableCell className="font-medium">{order.id}</TableCell>
                     <TableCell>{order.domainName || '—'}</TableCell>
                     <TableCell>
-                      {order.status === 'ACTIVE' ? (
-                        <Badge className="bg-green-600 text-white">
-                          Active
+                      {order.status === 'PENDING' && (
+                        <Badge className="bg-yellow-600 text-white">
+                          Pending
                         </Badge>
-                      ) : order.status === 'INACTIVE' ? (
-                        <Badge className="bg-secondary-foreground">
-                          Inactive
+                      )}
+                      {order.status === 'PAID' && (
+                        <Badge className="bg-blue-600 text-white">Paid</Badge>
+                      )}
+                      {order.status === 'PROCESSING' && (
+                        <Badge className="bg-purple-600 text-white">
+                          Processing
                         </Badge>
-                      ) : order.status === 'PENDING' ? (
-                        <Badge className="bg-yellow-600">Pending</Badge>
-                      ) : (
-                        <Badge variant="destructive">Faild</Badge>
+                      )}
+                      {order.status === 'COMPLETED' && (
+                        <Badge className="bg-green-700 text-white">
+                          Completed
+                        </Badge>
+                      )}
+                      {order.status === 'FAILED' && (
+                        <Badge variant="destructive">Failed</Badge>
+                      )}
+                      {order.status === 'EXPIRED' && (
+                        <Badge className="bg-gray-500 text-white">
+                          Expired
+                        </Badge>
+                      )}
+                      {order.status === 'CANCELLED' && (
+                        <Badge className="bg-red-500 text-white">
+                          Cancelled
+                        </Badge>
+                      )}
+                      {order.status === 'REFUNDED' && (
+                        <Badge className="bg-indigo-600 text-white">
+                          Refunded
+                        </Badge>
+                      )}
+                      {/* Fallback for unknown status */}
+                      {![
+                        'PENDING',
+                        'PAID',
+                        'PROCESSING',
+                        'COMPLETED',
+                        'FAILED',
+                        'EXPIRED',
+                        'CANCELLED',
+                        'REFUNDED',
+                      ].includes(order.status) && (
+                        <Badge variant="outline">{order.status}</Badge>
                       )}
                     </TableCell>
                     <TableCell>${order.amount}</TableCell>
-                    <TableCell>{order.metadata}</TableCell>
                     <TableCell>
                       {order.paidAt
                         ? new Date(order.paidAt).toLocaleDateString()
@@ -143,17 +179,13 @@ export default function OrderPage() {
                         : '—'}
                     </TableCell>
                     <TableCell className="text-right flex justify-end gap-3 items-center">
-                      <ToggoleStatus
-                        id={order.id}
-                        options={[
-                          'PAID',
-                          'CANCELLED',
-                          'REFUNDED',
-                          'EXPIRED',
-                        ]}
-                        status={order.status}
-                        url={`orders/${order.id}/status`}
-                      />
+                      <ToggoleStatus id={order.id} status={order.status} />
+                      {order.metadata && (
+                        <MetaData
+                          metadata={order.metadata as Record<string, string>}
+                          orderId={order.id}
+                        />
+                      )}
                       <Link href={`/admin/orders/${order.id}`}>
                         <EyeIcon className="w-5 h-5" />
                       </Link>

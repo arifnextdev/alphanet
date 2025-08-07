@@ -8,12 +8,9 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useSelector } from 'react-redux';
-import { RootState } from '@/lib/store';
 
 export default function LoginPage() {
   const router = useRouter();
-  const authUser = useSelector((state: RootState) => state.auth.user);
 
   const [form, setForm] = useState({ email: '', password: '' });
   const [login, { isLoading }] = useLoginMutation();
@@ -41,11 +38,16 @@ export default function LoginPage() {
     }
 
     try {
-       await login(form).unwrap();
+      const data = await login(form).unwrap();
       toast.success('Logged in successfully');
-      router.push('/admin/dashboard');
-    } catch (err) {
-      toast.error('Invalid email or password');
+      console.log('Login data:', data);
+      router.push(`/oauth-callback?token=${data.accessToken}`);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        toast.error(err.message);
+      } else {
+        toast.error('An unknown error occurred');
+      }
     }
   };
 

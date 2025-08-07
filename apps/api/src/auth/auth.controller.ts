@@ -2,9 +2,9 @@ import {
   Body,
   Controller,
   Get,
-  Headers,
   HttpCode,
   HttpStatus,
+  Param,
   Post,
   Req,
   Res,
@@ -16,12 +16,21 @@ import { ZodValidationPipe } from 'src/product/common/zodValidationPipe';
 import { AuthService } from './auth.service';
 import { CreateUserDto, CreateUserSchema } from './dto/user.dto';
 import { UserLoginDto, UserLoginSchema } from './dto/user.login.dto';
-import { Roles } from '../roles/decorator';
-import { Role } from '../roles/enum';
-import { RoleGuard } from '../roles/guards';
+
 import { AuthGuard } from '@nestjs/passport';
 import { Request, Response } from 'express';
-import { JwtAuthGuard } from './auth.guard';
+import {
+  ForgotPasswordDto,
+  ForgotPasswordSchema,
+} from './dto/forgot-password.dto';
+import {
+  ResetPasswordDto,
+  ResetPasswordSchema,
+} from './dto/reset-password.dto';
+import { RoleGuard } from 'src/roles/guards';
+import { Roles } from 'src/roles/decorator';
+import { Role } from 'src/roles/enum';
+
 
 @Controller('auth')
 export class AuthController {
@@ -40,8 +49,9 @@ export class AuthController {
     return this.authService.signUp(dto);
   }
 
-  @UseGuards(AuthGuard('jwt'))
   @Get('me')
+  @UseGuards(AuthGuard('jwt'))
+ 
   me(@Req() req: Request) {
     return this.authService.me(
       req.user as {
@@ -65,6 +75,17 @@ export class AuthController {
   logout(@Res() res: Response) {
     res.clearCookie('refreshToken');
     return res.json({ message: 'Logged out successfully' });
+  }
+
+  @Post('forgot-password')
+  @UsePipes(new ZodValidationPipe(ForgotPasswordSchema))
+  forgotPassword(@Body() dto: ForgotPasswordDto) {
+    return this.authService.forgotPassword(dto.email);
+  }
+
+  @Post('reset-password/:token')
+  resetPassword(@Param('token') token: string, @Body() dto: ResetPasswordDto) {
+    return this.authService.resetPassword(token, dto);
   }
 
   @Get('google')

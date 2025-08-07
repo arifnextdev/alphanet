@@ -13,29 +13,13 @@ import {
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { format } from 'date-fns';
-import { useGetOrderByIdQuery } from '@/lib/services/ordersApi';
-import { EyeIcon, PencilIcon } from 'lucide-react';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { IOrder, Transaction, useGetOrderByIdQuery } from '@/lib/services/ordersApi';
+import { EyeIcon } from 'lucide-react';
 import Link from 'next/link';
 
 export default function OrderDetailsPage() {
   const { id } = useParams();
-  const [order, setOrder] = useState<any>(null);
+  const [order, setOrder] = useState<IOrder | null>(null);
 
   const { data, isLoading: loading } = useGetOrderByIdQuery(id as string);
 
@@ -127,7 +111,7 @@ export default function OrderDetailsPage() {
             </TableHeader>
             <TableBody>
               {payments.length > 0 ? (
-                payments.map((payment: any) => (
+                payments.map((payment: Transaction) => (
                   <TableRow key={payment.id}>
                     <TableCell>{payment.id.slice(0, 6)}...</TableCell>
                     <TableCell>{payment.method || '—'}</TableCell>

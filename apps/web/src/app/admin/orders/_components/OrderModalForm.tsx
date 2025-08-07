@@ -1,6 +1,5 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -22,11 +21,11 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Loader2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
-import { useCreateOrderMutation } from '@/lib/services/ordersApi';
+import { useCreateAdminOrderMutation } from '@/lib/services/ordersApi';
 import { IProduct, useGetProductsQuery } from '@/lib/services/productsApi';
-import { set } from 'date-fns';
-import { Textarea } from '@/components/ui/textarea';
+import { toast } from 'sonner';
 
 export function OrderModalForm() {
   const [domainName, setDomainName] = useState('');
@@ -38,38 +37,31 @@ export function OrderModalForm() {
   const [userId, setUserId] = useState('');
   const [productType, setProductType] = useState<string>('HOSTING');
   const [products, setProducts] = useState<IProduct[]>([]);
-  const [email, setEmail] = useState('');
 
-  const [createOrder, { isLoading }] = useCreateOrderMutation();
+  const [createOrder, { isLoading }] = useCreateAdminOrderMutation();
   const { data } = useGetProductsQuery({ type: productType, limit: 10 });
 
   useEffect(() => {
-    if (data?.products) setProducts(data?.products || []);
-  });
+    if (data?.products) setProducts(data.products);
+  }, [data]);
 
-  const handleOrderAdd = () => {
+  const handleOrderAdd = async () => {
     if (!selectedProductId) return;
 
     const orderData = {
       domainName,
       productId: selectedProductId,
       username,
-      email,
       password,
       userId,
+      paymentMethod: 'CASH',
     };
 
-    // console.log(orderData);
-
-    createOrder(orderData);
-    // Reset
-    // setUsername('');
-    // setPassword('');
-    // setUserId('');
-    // setEmail('');
-    // setDomainName('');
-    // setSelectedProductId(null);
-    // setSelectedProduct(null);
+    toast.promise(createOrder(orderData).unwrap(), {
+      loading: 'Creating order...',
+      success: 'Order created successfully!',
+      error: 'Failed to create order',
+    });
   };
 
   return (
@@ -154,17 +146,6 @@ export function OrderModalForm() {
               id="username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="col-span-3"
-            />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="price" className="text-right">
-              Email
-            </Label>
-            <Input
-              id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
               className="col-span-3"
             />
           </div>

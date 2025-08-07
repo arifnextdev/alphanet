@@ -15,7 +15,7 @@ const Invoice = () => {
             <br />
             Phone: +88 09677220022, +88 01820020022
             <br />
-            Email:{' '}
+            Email:&apos; &apos;
             <a
               href="mailto:support@neyamotenterprise.com"
               className="text-blue-600"
@@ -23,7 +23,7 @@ const Invoice = () => {
               support@neyamotenterprise.com
             </a>
             <br />
-            Website:{' '}
+            Website:&apos; &apos;
             <a
               href="https://www.neyamotenterprise.com/"
               className="text-blue-600"
@@ -42,7 +42,7 @@ const Invoice = () => {
             <br />
             Phone: 8801713006500
             <br />
-            Email:{' '}
+            Email:&apos; &apos;
             <a href="mailto:samad.haque@gmail.com" className="text-blue-600">
               samad.haque@gmail.com
             </a>
@@ -78,7 +78,7 @@ const Invoice = () => {
                 <br />
                 IPTN 09613241002, Billing Month May-2025
                 <br />
-                Today's rest amount TK 0.00
+                Today&apos;s rest amount TK 0.00
               </td>
               <td className="border px-4 py-2">TK 600.00</td>
               <td className="border px-4 py-2">1</td>

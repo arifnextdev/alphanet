@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { PaymentStatus } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
@@ -49,5 +50,44 @@ export class PaymentService {
       },
     });
     return { ...paymentDetails };
+  }
+
+  async updatePaymentStatus(id: string, status: string) {
+    //validate status
+    const validStatuses = [
+      'PENDING',
+      'COMPLETED',
+      'FAILED',
+      'REFUNDED',
+      'CANCELLED',
+      'DUE',
+      'SUCCESS',
+    ];
+    if (!validStatuses.includes(status)) {
+      throw new Error('Invalid status');
+    }
+    const exist = await this.prisma.payment.findUnique({ where: { id } });
+    if (!exist) {
+      throw new Error('Payment not found');
+    }
+    const payment = await this.prisma.payment.update({
+      where: { id },
+      data: { status: status as PaymentStatus },
+      select: {
+        id: true,
+        status: true,
+        amount: true,
+        paidAt: true,
+        createdAt: true,
+        method: true,
+        currency: true,
+        transId: true,
+        tax: true,
+        vat: true,
+        discount: true,
+        subtotal: true,
+      },
+    });
+    return payment;
   }
 }

@@ -39,6 +39,8 @@ model User {
   provider       AuthProvider @default(CREDENTIAL)
   providerId     String?      // for Google/GitHub ID
   refreshToken     String?
+  passwordResetToken     String?
+  passwordResetExpires   DateTime?
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
   loginHistories LoginHistory[]
@@ -146,6 +148,8 @@ enum ProductType {
 enum OrderStatus {
   PENDING
   PAID
+  PROCESSING
+  COMPLETED
   FAILED
   EXPIRED
   CANCELLED
@@ -206,7 +210,7 @@ model Payment {
   subtotal  Float? @default(0)
   metadata  Json?
   createdAt DateTime @default(now())
-  paidAt    DateTime @default(now())
+  paidAt    DateTime?
   user      User @relation(fields: [userId],references: [id])
   order     Order    @relation(fields: [orderId], references: [id])
   @@index([userId,status,transId,orderId,paidAt])
