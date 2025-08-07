@@ -5,6 +5,7 @@ import {
   Get,
   Param,
   Patch,
+  Post,
   Put,
   Query,
 } from '@nestjs/common';
@@ -15,6 +16,11 @@ import { UserService } from './user.service';
 @Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
+
+  @Post('/admin/create')
+  createAdmin(@Body() data: any) {
+    return this.userService.createUser(data);
+  }
 
   @Get()
   getAllUser(

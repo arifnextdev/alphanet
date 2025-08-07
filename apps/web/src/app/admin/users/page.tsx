@@ -29,6 +29,7 @@ import {
 } from '@/components/ui/table';
 import { EyeIcon } from 'lucide-react';
 import Link from 'next/link';
+import CreateUserModal from '../_components/CreateUserModal';
 
 export default function AdminUsersPage() {
   const [query, setQuery] = useState('');
@@ -120,6 +121,8 @@ export default function AdminUsersPage() {
                 </SelectGroup>
               </SelectContent>
             </Select>
+
+            <CreateUserModal/>
           </div>
         </CardHeader>
         <CardContent>

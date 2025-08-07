@@ -49,7 +49,7 @@ export class OrderController {
   }
 
   @Post('/admin')
-  @UseGuards(AuthGuard('jwt'), RoleGuard)
+  // @UseGuards(AuthGuard('jwt'), RoleGuard)
   @Roles(Role.ADMIN, Role.MODERATOR)
   @UsePipes(new ZodValidationPipe(adminOrderCreateSchema))
   createOrderAdmin(@Body() data: AdminOrderCreateDto) {

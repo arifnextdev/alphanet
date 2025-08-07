@@ -1,6 +1,5 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -22,8 +21,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Loader2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
-import { useCreateOrderMutation } from '@/lib/services/ordersApi';
+import { useCreateAdminOrderMutation } from '@/lib/services/ordersApi';
 import { IProduct, useGetProductsQuery } from '@/lib/services/productsApi';
 import { toast } from 'sonner';
 
@@ -38,7 +38,7 @@ export function OrderModalForm() {
   const [productType, setProductType] = useState<string>('HOSTING');
   const [products, setProducts] = useState<IProduct[]>([]);
 
-  const [createOrder, { isLoading }] = useCreateOrderMutation();
+  const [createOrder, { isLoading }] = useCreateAdminOrderMutation();
   const { data } = useGetProductsQuery({ type: productType, limit: 10 });
 
   useEffect(() => {

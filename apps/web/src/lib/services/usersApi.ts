@@ -321,6 +321,14 @@ interface IGetPaymentsResponse {
   pagination: IPagination;
 }
 
+interface ICreateUser {
+  name: string;
+  email: string;
+  password: string;
+  phone: string;
+  roles: string[];
+}
+
 export const usersApi = createApi({
   reducerPath: 'usersApi',
   baseQuery: fetchBaseQuery({ baseUrl: 'http://localhost:3001/' }),
@@ -336,6 +344,14 @@ export const usersApi = createApi({
         },
       }),
       providesTags: ['Users'],
+    }),
+    createUser: builder.mutation<IUser, ICreateUser>({
+      query: (data) => ({
+        url: 'users/admin/create',
+        method: 'POST',
+        body: data,
+      }),
+      invalidatesTags: ['Users'],
     }),
     getUserById: builder.query<UserProfile, string>({
       query: (id) => ({
@@ -417,6 +433,7 @@ export const usersApi = createApi({
 
 export const {
   useGetUsersQuery,
+  useCreateUserMutation,
   useGetUserByIdQuery,
   useGetOrdersByUserIdQuery,
   useGetTransactionsByUserIdQuery,

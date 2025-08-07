@@ -10,6 +10,30 @@ import { Role, UserStatus } from '@prisma/client';
 export class UserService {
   constructor(private prisma: PrismaService) {}
 
+  async createUser(data: CreateUserDto) {
+    const existUser = await this.prisma.user.findUnique({
+      where: {
+        email: data.email,
+      },
+    });
+
+    if (existUser) {
+      throw new NotFoundException('User already exists');
+    }
+
+    const hashedPassword = await bcrypt.hash(data.password, 10);
+    const user = await this.prisma.user.create({
+      data: { ...data, password: hashedPassword },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not created');
+    }
+    return {
+      message: 'User created successfully',
+    };
+  }
+
   //Get all user
   async getAllUser({
     page = 1,

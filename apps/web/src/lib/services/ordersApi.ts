@@ -155,6 +155,17 @@ export const ordersApi = createApi({
     }),
     createOrder: builder.mutation<Partial<OrderResponse>, CreateOrderPayload>({
       query: (data) => ({
+        url: 'orders',
+        method: 'POST',
+        body: data,
+      }),
+      invalidatesTags: ['Orders'],
+    }),
+    createAdminOrder: builder.mutation<
+      Partial<OrderResponse>,
+      CreateOrderPayload
+    >({
+      query: (data) => ({
         url: 'orders/admin',
         method: 'POST',
         body: data,
@@ -220,6 +231,7 @@ export const ordersApi = createApi({
 export const {
   useGetOrdersQuery,
   useCreateOrderMutation,
+  useCreateAdminOrderMutation,
   useGetOrderByIdQuery,
   useGetFilterTransectionQuery,
   useDeleteOrderMutation,
